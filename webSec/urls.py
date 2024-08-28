@@ -1,6 +1,8 @@
+# webSec/urls.py
+
 from django.urls import path
 from . import views
 
 urlpatterns = [
-    path('',views.land_page)
+    path('', views.index, name='index'),
 ]

@@ -8,44 +8,35 @@
     <!-- Bootstrap CSS -->
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <style>
+        /* Your existing styles here */
         body {
             background-color: #9290C3;
-            /* Lavender blue background */
             margin: 0;
             padding: 0;
         }
 
         .navbar {
             background-color: #535C91;
-            /* Steel blue color to match body */
             padding: 1rem 0;
-            /* Increased vertical padding */
         }
 
         .navbar-brand {
             color: #fff;
-            /* White text color */
         }
 
         .navbar-brand .motto {
             font-size: 0.9rem;
-            /* Slightly smaller font size for the motto */
             color: #fff;
-            /* White text color */
             font-weight: 300;
-            /* Lighter font weight */
         }
 
         .navbar-nav .nav-link {
             color: #fff;
-            /* White text color */
         }
 
         .navbar-nav .nav-link:hover {
             color: #9290C3;
-            /* Lavender blue color on hover */
             background-color: #1B1A55;
-            /* Navy blue background on hover */
         }
 
         .search-container {
@@ -83,7 +74,6 @@
             border: none;
             border-radius: 25px;
             background: #535C91;
-            /* Steel blue color */
             color: #fff;
             font-size: 18px;
             cursor: pointer;
@@ -91,63 +81,6 @@
 
         .search-box button:hover {
             background: #1B1A55;
-            /* Navy blue color for hover */
-        }
-
-        .modal-content {
-            background: #17153B;
-            /* Dark navy background */
-            border-radius: 8px;
-            border: 1px solid #433D8B;
-            /* Lighter navy border */
-        }
-
-        .modal-header {
-            background: #2E236C;
-            /* Medium navy color */
-            color: #C8ACD6;
-            /* Light lavender text color */
-            border-bottom: none;
-        }
-
-        .modal-header .close {
-            color: #C8ACD6;
-            /* Light lavender color */
-        }
-
-        .modal-body {
-            padding: 2rem;
-            background: #17153B;
-            /* Dark navy background */
-            color: #C8ACD6;
-            /* Light lavender text color */
-        }
-
-        .modal-body .form-control {
-            background: #2E236C;
-            /* Medium navy background */
-            color: #C8ACD6;
-            /* Light lavender text color */
-            border: 1px solid #433D8B;
-            /* Lighter navy border */
-        }
-
-        .modal-body .form-control::placeholder {
-            color: #C8ACD6;
-            /* Light lavender placeholder text color */
-        }
-
-        .modal-body .btn-primary {
-            background-color: #433D8B;
-            /* Lighter navy color */
-            border: none;
-            color: #C8ACD6;
-            /* Light lavender text color */
-        }
-
-        .modal-body .btn-primary:hover {
-            background-color: #2E236C;
-            /* Medium navy color for hover */
         }
     </style>
 </head>
@@ -175,12 +108,29 @@
     <!-- Search Box -->
     <div class="search-container">
         <div class="search-box">
-            <h2>Enter Your Domaain</h2>
-            <input type="text" placeholder="Scan Vulnerabilities...">
-            <button type="button">Search</button>
+            <h2>Enter Your Domain</h2>
+            <!-- Update form to use POST method -->
+            <form method="post" action="{% url 'index' %}">
+                {% csrf_token %}
+                <input type="text" name="website_url" placeholder="Scan Vulnerabilities..." required>
+                <button type="submit">Search</button>
+            </form>
         </div>
     </div>
 
+    <!-- Results Section -->
+    <div class="container mt-5">
+        {% if results %}
+            <h3 class="text-center">SQL Injection Check Results for {{ url }}</h3>
+            <ul class="list-group">
+                {% for result in results %}
+                    <li class="list-group-item">{{ result }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    </div>
+
+    <!-- Login and Sign Up Modals (Existing content remains the same) -->
     <!-- Login Modal -->
     <div class="modal fade" id="loginModal" tabindex="-1" role="dialog" aria-labelledby="loginModalLabel"
         aria-hidden="true">
