@@ -8,6 +8,33 @@
     <!-- Bootstrap CSS -->
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <style>
+        .spinner {
+            display: none;
+            border: 16px solid #f3f3f3;
+            /* Light grey */
+            border-top: 16px solid #3498db;
+            /* Blue */
+            border-radius: 50%;
+            width: 120px;
+            height: 120px;
+            animation: spin 2s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .loading {
+            display: block;
+        }
+
         body {
             background-color: #9290C3;
             /* Lavender blue background */
@@ -176,8 +203,11 @@
     <div class="search-container">
         <div class="search-box">
             <h2>Enter Your Domaain</h2>
-            <input type="text" placeholder="Scan Vulnerabilities...">
-            <button type="button">Search</button>
+            <form method="post">
+                {% csrf_token %}
+                <input type="text" name="name" placeholder="Scan Vulnerabilities...">
+                <button type="submit">Search</button>
+            </form>
         </div>
     </div>
 
@@ -245,6 +275,42 @@
             </div>
         </div>
     </div>
+    <div id="loading-spinner" class="spinner"></div>
+
+    <div id="result-container"></div>
+
+    <script>
+        document.getElementById('crawler-form').addEventListener('submit', function (event) {
+            event.preventDefault(); // Prevent default form submission
+
+            var form = event.target;
+            var formData = new FormData(form);
+            var xhr = new XMLHttpRequest();
+
+            xhr.open('POST', form.action, true);
+            xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+            xhr.setRequestHeader('X-CSRFToken', formData.get('csrfmiddlewaretoken'));
+
+            xhr.onload = function () {
+                if (xhr.status >= 200 && xhr.status < 300) {
+                    // Hide the spinner and show the result
+                    document.getElementById('loading-spinner').classList.remove('loading');
+                    document.getElementById('result-container').innerHTML = xhr.responseText;
+                } else {
+                    // Handle errors
+                    console.error('Request failed. Returned status of ' + xhr.status);
+                }
+            };
+
+            xhr.onerror = function () {
+                console.error('Request failed');
+            };
+
+            // Show the spinner and send the request
+            document.getElementById('loading-spinner').classList.add('loading');
+            xhr.send(formData);
+        });
+    </script>
 
     <!-- Bootstrap JS and dependencies -->
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
