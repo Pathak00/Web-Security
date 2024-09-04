@@ -77,7 +77,11 @@ WSGI_APPLICATION = 'websecurity.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
+<<<<<<< Updated upstream
         'NAME': 'signupuser',
+=======
+        'NAME': 'loginsection',
+>>>>>>> Stashed changes
         'USER': 'root',
         'PASSWORD': '',
         'HOST': 'localhost',

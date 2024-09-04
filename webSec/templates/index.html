@@ -193,15 +193,15 @@
                     </button>
                 </div>
                 <div class="modal-body">
-                    <form>
+                    <form action="" method="POST">
                         <div class="form-group">
                             <label for="loginUsername">Username</label>
-                            <input type="text" class="form-control" id="loginUsername" placeholder="Enter username"
+                            <input type="text" class="form-control" id="loginUsername" name="loginUsername"placeholder="Enter username"
                                 required>
                         </div>
                         <div class="form-group">
                             <label for="loginPassword">Password</label>
-                            <input type="password" class="form-control" id="loginPassword" placeholder="Password"
+                            <input type="password" class="form-control" id="loginPassword" name="loginUsername"placeholder="Password"
                                 required>
                         </div>
                         <button type="submit" class="btn btn-primary btn-block">Login</button>
@@ -223,20 +223,21 @@
                     </button>
                 </div>
                 <div class="modal-body">
-                    <form>
+                    <form action="% url 'signup' %" method="POST">
+                         {% csrf_token %}
                         <div class="form-group">
                             <label for="signupUsername">Username</label>
-                            <input type="text" class="form-control" id="signupUsername" placeholder="Enter username"
+                            <input type="text" class="form-control" id="signupUsername" name="signupUsername"placeholder="Enter username"
                                 required>
                         </div>
                         <div class="form-group">
                             <label for="signupEmail">Email address</label>
-                            <input type="email" class="form-control" id="signupEmail" placeholder="Enter email"
+                            <input type="email" class="form-control" id="signupEmail" name="signupEmail" placeholder="Enter email"
                                 required>
                         </div>
                         <div class="form-group">
                             <label for="signupPassword">Password</label>
-                            <input type="password" class="form-control" id="signupPassword" placeholder="Password"
+                            <input type="password" class="form-control" id="signupPassword" name="signupPassword" placeholder="Password"
                                 required>
                         </div>
                         <button type="submit" class="btn btn-primary btn-block">Sign Up</button>

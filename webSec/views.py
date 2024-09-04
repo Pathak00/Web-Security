@@ -1,6 +1,7 @@
-from django.shortcuts import render
+from django.shortcuts import render,redirect
 from django.http import HttpResponse
 from.models import *
+<<<<<<< Updated upstream
 # Create your views here.
 def land_page(request):
     return render(request,'index.html')
@@ -60,3 +61,34 @@ def Login(request):
             message ="User does not exist"
             return render(request,"signup.html",{'msg':message})
     
+=======
+from django.contrib.auth import authenticate, login, logout
+from django.contrib import messages
+
+
+# Create your views here.
+def land_page(request):
+    return render(request,'index.html')
+#signup view
+def user_signup(request):
+    if request.method == 'POST':
+        signupusername = request.POST['signupUsername']
+        signupemail = request.POST['signupEmail']
+        signuppassword = request.POST['signupPassword']
+        # Validate the inputs and create a new user
+        if SignUp.objects.filter(username=signupusername).exists():
+            messages.error(request, 'Username already exists.')
+        elif SignUp.objects.filter(email=signupemail).exists():
+            messages.error(request, 'Email already exists.')
+        else:
+            user = SignUp(username=signupusername, email=signupemail, password=signuppassword)
+            user.save()
+            messages.success(request, 'You have successfully signed up.')
+            return redirect('land_page')  # Use the name defined in the urls.py
+    return redirect('land_page')  # Use the name defined in the urls.py
+
+
+
+
+
+>>>>>>> Stashed changes
