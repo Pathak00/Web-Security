@@ -21,16 +21,19 @@ class DomainFetcher:
             response = requests.get(robots_url, headers=self.headers)
             if response.status_code == 200:
                 self.robots_txt = response.text
+                
         except requests.RequestException as e:
             print(f'Error fetching robots.txt: {e}')
 
     def is_allowed_by_robots(self, url):
-        if not self.robots_txt:
+        if  self.robots_txt:
             return True
-        parsed_url = urlparse(url)
-        path = parsed_url.path
-        disallow_patterns = re.findall(r"Disallow:\s*(.*)", self.robots_txt, re.IGNORECASE)
-        return all(not re.match(pattern.strip(), path) for pattern in disallow_patterns)
+        return False
+        # parsed_url = urlparse(url)
+        # path = parsed_url.path
+        # disallow_patterns = re.findall(r"^\s*Allow:\s*(.*)", self.robots_txt, re.IGNORECASE)
+        # print(disallow_patterns)
+        # return all(not re.match(pattern.strip(), path) for pattern in disallow_patterns)
 
     def fetch_url(self, url, retries=3):
         for attempt in range(retries):
@@ -54,12 +57,28 @@ class DomainFetcher:
                     self.process_page(soup)
                     return self.results
                 else:
-                    return [f'URL blocked by robots.txt: {self.start_url}']
+                    parsed_url = urlparse(self.start_url)
+                    path = parsed_url.path
+                    Allow_patterns =re.findall(r"^\s*Allow:\s*(.*)", self.robots_txt, re.IGNORECASE | re.MULTILINE)
+                  
+                    if Allow_patterns:  
+                        for pattern in Allow_patterns:
+                            url_to_visit = urljoin(self.base_url, pattern.strip())
+                            url_to_visit=self.filter_url(url_to_visit)
+                            if self.is_valid_url(url_to_visit) and url_to_visit not in self.results:
+                                self.results.append(url_to_visit)
+                        return self.results
+                    elif len(Allow_patterns) <= 1:
+                        soup = BeautifulSoup(response.text, 'html.parser')
+                        self.process_page(soup)
+                        return self.results
+                    else:
+                        return ['No Allowed URLby Robots.txt']
             elif response.status_code == 404:
                 return [f'URL not found: {self.start_url}']
             else:
                 return [f'Failed to retrieve URL: {self.start_url} (Status Code: {response.status_code})']
-        return ['Failed to retrieve URL']
+        return ['Failed to retrieve Please Check URL']
 
     def process_page(self, soup):
         for link in soup.find_all('a', href=True):
@@ -72,3 +91,23 @@ class DomainFetcher:
     def is_valid_url(self, url):
         parsed_url = urlparse(url)
         return parsed_url.scheme in ['http', 'https'] and parsed_url.hostname == urlparse(self.base_url).hostname
+
+    def is_valid_domain(self,url):
+        parsed_url = urlparse(url)
+        print(parsed_url)
+        return parsed_url.scheme in ['http', 'https'] and parsed_url.netloc
+    
+    def filter_url(self,url):
+        parsed_url = urlparse(url)
+        path_parts = [part for part in parsed_url.path.strip('/').split('/') if part]
+
+        if path_parts:
+            print(path_parts)
+            filtered_path = f"/{path_parts[0]}/"  # Retain the first part with a trailing slash
+        else:
+            filtered_path = "/"  # Fallback to root if no path parts
+    
+        filtered_url = f"{parsed_url.scheme}://{parsed_url.hostname}{filtered_path}"
+        return filtered_url
+    
+    
