@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Font Awesome for icons -->
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+
+        /* Navbar styles */
+        nav {
+            background: #1F1A3D;
+            color: white;
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        nav .user-info {
+            display: flex;
+            align-items: center;
+        }
+
+        nav .user-info img {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+
+        nav .user-info span {
+            margin-right: 10px;
+        }
+
+        nav .logout-btn {
+            background: transparent;
+            border: none;
+            color: white;
+            font-size: 18px;
+            cursor: pointer;
+        }
+
+        nav .logout-btn i {
+            font-size: 20px;
+        }
+
+        /* Main content area */
+        .main-content {
+            margin: 20px;
+            background: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        footer {
+            text-align: center;
+            padding: 10px;
+            background: #1F1A3D;
+            color: white;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        table th,
+        table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        table th {
+            background-color: #1F1A3D;
+            color: white;
+        }
+
+        table tr:hover {
+            background-color: #f5f5f5;
+        }
+
+        .severity-high {
+            color: red;
+            font-weight: bold;
+        }
+
+        .severity-medium {
+            color: orange;
+            font-weight: bold;
+        }
+
+        .severity-low {
+            color: green;
+            font-weight: bold;
+        }
+
+        .download-section {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .download-section button {
+            background-color: #007BFF;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        .download-section button:hover {
+            background-color: #0056b3;
+        }
+
+        /* View Button Styles */
+        .view-btn,
+        .download-btn {
+            background-color: #28a745;
+            color: white;
+            padding: 5px 10px;
+            border: none;
+            cursor: pointer;
+            border-radius: 3px;
+        }
+
+        .view-btn:hover,
+        .download-btn:hover {
+            background-color: #218838;
+        }
+
+        /* Modal Styles (for view details) */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            width: 60%;
+            max-width: 500px;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-close {
+            cursor: pointer;
+            font-size: 20px;
+            color: #535C91;
+        }
+
+        .modal-body {
+            margin-top: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Navbar -->
+    <nav>
+        <div class="user-info">
+            <img id="profilePic" alt="Profile Picture">
+            <span id="userName">User</span>
+        </div>
+        <button class="logout-btn" onclick="logout()">
+            <i class="fas fa-sign-out-alt"></i> Logout
+        </button>
+    </nav>
+
+    <main>
+        <!-- Vulnerability Scan Report Table -->
+        <section class="main-content">
+            <h2>Vulnerability Scan Reports</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Website</th>
+                        <th>Scan Date</th>
+                        <th>Vulnerability Found</th>
+                        <th>Severity</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="scanReportTable">
+                    <!-- Rows will be dynamically populated with JavaScript -->
+                </tbody>
+            </table>
+        </section>
+    </main>
+
+    <!-- Modal for Viewing Report Details -->
+    <div id="reportModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Scan Report Details</h3>
+                <span class="modal-close" onclick="closeModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <p id="modalContent"></p>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2024 WebSecurity. All rights reserved.</p>
+    </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script> <!-- jsPDF library -->
+    <script>
+        // Example user data (in practice, this would come from a backend)
+        const userData = {
+            name: "John Doe",
+            email: "john@example.com",
+            joinDate: "January 1, 2023",
+            profilePic: "profile.jpg" // Update this to the actual profile picture URL
+        };
+
+
+
+        // Example scan report data (in practice, this would come from a backend)
+        const scanReports = [
+            {
+                website: "example.com",
+                scanDate: "October 30, 2024",
+                vulnerability: "SQL Injection",
+                severity: "High"
+            },
+            {
+                website: "another-example.com",
+                scanDate: "October 29, 2024",
+                vulnerability: "Cross-site Scripting (XSS)",
+                severity: "Medium"
+            },
+            {
+                website: "third-site.com",
+                scanDate: "October 28, 2024",
+                vulnerability: "Cross-site Request Forgery (CSRF)",
+                severity: "Low"
+            }
+        ];
+
+        // Populate user data on page load
+        document.getElementById('userName').innerText = userData.name;
+        document.getElementById('profilePic').src = userData.profilePic;
+
+        // Populate scan report table dynamically
+        const scanReportTable = document.getElementById('scanReportTable');
+        scanReports.forEach(report => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${report.website}</td>
+                <td>${report.scanDate}</td>
+                <td>${report.vulnerability}</td>
+                <td class="${getSeverityClass(report.severity)}">${report.severity}</td>
+                <td>
+                    <button class="view-btn" onclick="viewReport('${report.website}', '${report.scanDate}', '${report.vulnerability}', '${report.severity}')">View</button>
+                    <button class="download-btn" onclick="downloadPDF('${report.website}', '${report.scanDate}', '${report.vulnerability}', '${report.severity}')">Download</button>
+                </td>
+            `;
+            scanReportTable.appendChild(row);
+        });
+
+        // Function to assign a class based on severity level
+        function getSeverityClass(severity) {
+            switch (severity) {
+                case 'High':
+                    return 'severity-high';
+                case 'Medium':
+                    return 'severity-medium';
+                case 'Low':
+                    return 'severity-low';
+                default:
+                    return '';
+            }
+        }
+
+        // View report in a modal
+        function viewReport(website, scanDate, vulnerability, severity) {
+            const modalContent = `
+                <strong>Website:</strong> ${website} <br>
+                <strong>Scan Date:</strong> ${scanDate} <br>
+                <strong>Vulnerability Found:</strong> ${vulnerability} <br>
+                <strong>Severity:</strong> ${severity}
+            `;
+            document.getElementById('modalContent').innerHTML = modalContent;
+            document.getElementById('reportModal').style.display = 'flex';
+        }
+
+        // Close the modal
+        function closeModal() {
+            document.getElementById('reportModal').style.display = 'none';
+        }
+
+        // Logout function
+        function logout() {
+            // Redirect to login page or perform other logout actions
+            alert("You have logged out.");
+        }
+
+        // Function to download PDF report
+        function downloadPDF(website, scanDate, vulnerability, severity) {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            doc.setFontSize(18);
+            doc.text("Vulnerability Scan Report", 20, 20);
+
+            let yOffset = 30;
+            doc.setFontSize(12);
+            doc.text(`Website: ${website}`, 20, yOffset);
+            yOffset += 10;
+            doc.text(`Scan Date: ${scanDate}`, 20, yOffset);
+            yOffset += 10;
+            doc.text(`Vulnerability: ${vulnerability}`, 20, yOffset);
+            yOffset += 10;
+            doc.text(`Severity: ${severity}`, 20, yOffset);
+
+            doc.save(`${website}_scan_report.pdf`);
+        }
+    </script>
+</body>
+
+</html>

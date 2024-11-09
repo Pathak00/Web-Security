@@ -5,6 +5,8 @@ from bs4 import BeautifulSoup
 from urllib.parse import urlparse, urljoin
 import re
 import time
+from django.db import connection
+import pymysql
 
 class DomainFetcher:
     def __init__(self, start_url):
@@ -14,6 +16,29 @@ class DomainFetcher:
         self.headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'}
         self.visited = set()
         self.results = []
+      
+
+    def execute_query(self,query):
+        try:
+            connection = pymysql.connect(
+                host='127.0.0.1',
+                user='root',          # Your database username
+                password='',          # Your database password
+                db='mydb',           # Your database name
+                charset='utf8mb4',
+                cursorclass=pymysql.cursors.DictCursor
+            )
+            with connection:
+                cursor = connection.cursor()
+                cursor.execute(query)
+                # Fetching results
+                results = cursor.fetchall()
+                print("Connection successful!")
+                return results
+        except Exception as e:
+            print(f"Connection failed: {e}")
+            return None
+
 
     def fetch_robots_txt(self):
         robots_url = urljoin(self.base_url, '/robots.txt')
@@ -21,11 +46,11 @@ class DomainFetcher:
             response = requests.get(robots_url, headers=self.headers)
             if response.status_code == 200:
                 self.robots_txt = response.text
-                
+          
         except requests.RequestException as e:
             print(f'Error fetching robots.txt: {e}')
 
-    def is_allowed_by_robots(self, url):
+    def is_robotstxt_present(self, url):
         if  self.robots_txt:
             return True
         return False
@@ -52,7 +77,7 @@ class DomainFetcher:
         response = self.fetch_url(self.start_url)
         if response:
             if response.status_code == 200:
-                if self.is_allowed_by_robots(self.start_url):
+                if self.is_robotstxt_present(self.start_url):
                     soup = BeautifulSoup(response.text, 'html.parser')
                     self.process_page(soup)
                     return self.results
