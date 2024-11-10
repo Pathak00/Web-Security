@@ -190,7 +190,7 @@
             <img id="profilePic" alt="Profile Picture">
             <span id="userName">User</span>
         </div>
-        <button class="logout-btn" onclick="logout()">
+        <button class="logout-btn" onclick="logout()" href="{%url 'user_logout'%}">
             <i class="fas fa-sign-out-alt"></i> Logout
         </button>
     </nav>
@@ -322,7 +322,8 @@
         // Logout function
         function logout() {
             // Redirect to login page or perform other logout actions
-            alert("You have logged out.");
+            window.location.href = "{% url 'user_logout' %}";
+
         }
 
         // Function to download PDF report

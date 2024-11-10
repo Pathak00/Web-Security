@@ -7,6 +7,7 @@ import re
 import time
 from django.db import connection
 import pymysql
+import datetime
 
 class DomainFetcher:
     def __init__(self, start_url):
@@ -80,6 +81,7 @@ class DomainFetcher:
                 if self.is_robotstxt_present(self.start_url):
                     soup = BeautifulSoup(response.text, 'html.parser')
                     self.process_page(soup)
+                    print(self.results)
                     return self.results
                 else:
                     parsed_url = urlparse(self.start_url)
@@ -136,3 +138,5 @@ class DomainFetcher:
         return filtered_url
     
     
+    
+

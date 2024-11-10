@@ -6,7 +6,7 @@ from .crawler import DomainFetcher
 from urllib.parse import urlparse
 import socket
 from django.shortcuts import render, redirect
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, login,logout
 
 from django.contrib import messages
 from django.contrib.auth.forms import UserCreationForm  
@@ -72,7 +72,6 @@ def registerPage(request):
     
     if request.method=='POST':
         form=CreateUserForm(request.POST)
-        print(form.errors)
         if form.is_valid():
             form.save()
             messages.success(request, 'Account created successfully!')
@@ -84,3 +83,8 @@ def registerPage(request):
             
     context={'form':form}
     return render(request,'register.html',context)
+
+
+def user_logout(request):
+    logout(request)
+    return redirect('login_view')
