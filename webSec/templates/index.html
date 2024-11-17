@@ -212,7 +212,7 @@
     <div class="search-container">
         <div class="search-box">
             <h2>Enter Your Domain</h2>
-            <form method="post">
+            <form method="POST" action="">
                 {% csrf_token %}
                 <input type="text" name="name" placeholder="Scan Vulnerabilities...">
                 <button type="submit">Search</button>
@@ -262,6 +262,9 @@
     <div id="loading-spinner" class="spinner"></div>
 
     <div id="result-container"></div>
+
+
+
 
     <script>
         document.getElementById('crawler-form').addEventListener('submit', function (event) {

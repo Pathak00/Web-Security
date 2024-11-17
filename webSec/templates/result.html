@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SQL Injection Check Result</title>
+</head>
+
+<body>
+    <h1>SQL Injection Check Result</h1>
+    <p><strong>URL:</strong> {{ url }}</p>
+    <h2>Severity: {{ severity }}</h2>
+
+    {% if severity == "High" %}
+    <p style="color: red;">This URL is vulnerable to SQL Injection. Immediate action is required!</p>
+    {% else %}
+    <p style="color: green;">This URL is safe from SQL Injection.</p>
+    {% endif %}
+
+    <br>
+    <a href="{% url 'home' %}">Go back to home page</a>
+</body>
+
+</html>
