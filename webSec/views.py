@@ -1,5 +1,4 @@
 # myapp/views.py
-
 from django.shortcuts import render
 from django.http import HttpResponse
 from .crawler import DomainFetcher
@@ -18,6 +17,7 @@ from reportlab.pdfgen import canvas
 import os
 from reportlab.lib.pagesizes import letter
 from django.conf import settings
+from .scanner import get_javascript_libraries, check_vulnerabilities
 
 
 def land_page(request):
@@ -26,25 +26,38 @@ def land_page(request):
             domain_url = request.POST.get('name')
             if not domain_url.startswith("http://") and not domain_url.startswith("https://"):
                 domain_url = "https://" + domain_url
-            fetcher=DomainFetcher(domain_url)
+
+            fetcher = DomainFetcher(domain_url)
             if domain_url:
                 if fetcher.is_valid_domain(domain_url):
                     results = fetcher.crawl_domain()
                     result_html = '<br>'.join(results)
                 else:
                     result_html = 'Invalid URL'
-                    
-             
-                headers_output=scan_website_headers(domain_url)
-                pdf_response = generate_pdf(domain_url, headers_output)
+
+                # Detect JavaScript libraries using scanner.py
+                libraries = get_javascript_libraries(domain_url)
+                vulnerabilities = check_vulnerabilities(libraries)
+
+                # Format vulnerabilities into an HTML string for display
+                vulnerabilities_html = ""
+                for vuln in vulnerabilities:
+                    vulnerabilities_html += f"<p><b>Library:</b> {vuln['library']}</p>"
+                    for issue in vuln['vulnerabilities']:
+                        vulnerabilities_html += f"<p>- CVE: {issue['CVE']}, Description: {issue['description']}</p>"
+
+                # Append vulnerabilities to result_html
+                result_html += f"<br><h3>Vulnerable JavaScript Libraries:</h3>{vulnerabilities_html}"
+
+                # Generate PDF including vulnerable libraries
+                headers_output = scan_website_headers(domain_url)
+                pdf_response = generate_pdf(domain_url, headers_output, vulnerabilities)
                 return pdf_response
-                # return HttpResponse(f'Crawling result:<br>{result_html}')
 
     return render(request, 'index.html')
-            
 
 
-def generate_pdf(domain_url, headers):
+def generate_pdf(domain_url, headers, vulnerabilities):
     # Create a BytesIO buffer to hold the PDF data
     buffer = BytesIO()
 
@@ -55,7 +68,7 @@ def generate_pdf(domain_url, headers):
     c.setFont("Helvetica-Bold", 20)
     c.drawString(100, 750, "WebSecurity: Website Scan Results")
 
-    # Optionally, add a logo at the top-left corner (make sure to update the path to your logo file)
+    # Optionally, add a logo at the top-left corner
     logo_path = os.path.join(settings.STATICFILES_DIRS[0], 'images', 'logo.png')  
     try:
         c.drawImage(logo_path, 50, 730, width=100, height=50)
@@ -67,20 +80,35 @@ def generate_pdf(domain_url, headers):
     c.drawString(100, 710, f"Website Scan Results for: {domain_url}")
     c.drawString(100, 690, "Important Headers:")
 
-    # Draw a border around the content area
+# Draw a border around the content area
     c.setStrokeColorRGB(0, 0, 0)  # Black color for border
     c.setLineWidth(1)
     c.rect(50, 100, 500, 600)  # Rectangle with x, y, width, and height (from bottom-left corner)
 
-    # Loop through headers and write them to the PDF, adjusting the position for each line
+
+    # Draw headers
     y_position = 650
     for header, value in headers.items():
-        if y_position < 120:  # Prevent content from going off the page
+        if y_position < 120:
             c.showPage()
             c.setFont("Helvetica", 12)
             y_position = 750
         c.drawString(100, y_position, f"{header}: {value}")
         y_position -= 20
+
+    # Draw vulnerabilities section
+    c.drawString(100, y_position, "Vulnerable JavaScript Libraries:")
+    y_position -= 20
+    for vuln in vulnerabilities:
+        if y_position < 120:
+            c.showPage()
+            c.setFont("Helvetica", 12)
+            y_position = 750
+        c.drawString(100, y_position, f"Library: {vuln['library']}")
+        y_position -= 20
+        for issue in vuln['vulnerabilities']:
+            c.drawString(120, y_position, f"CVE: {issue['CVE']}, Description: {issue['description']}")
+            y_position -= 20
 
     # Finalize the PDF page and save it
     c.showPage()
