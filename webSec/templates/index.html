@@ -208,6 +208,12 @@
         <button class="download-btn" onclick="downloadPDF()">Download Scan Report</button>
     </div>
 
+
+    {% if pdf_url %}
+    <h2>Generated PDF Report</h2>
+    <button onclick="window.open('{{ pdf_url }}', '_blank')">Open PDF in New Window</button>
+    {% endif %}
+
     <!-- Search Box -->
     <div class="search-container">
         <div class="search-box">
@@ -219,6 +225,8 @@
             </form>
         </div>
     </div>
+
+
 
     <!-- Login Modal -->
     <div class="modal fade" id="loginModal" tabindex="-1" role="dialog" aria-labelledby="loginModalLabel"

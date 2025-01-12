@@ -102,7 +102,7 @@ WSGI_APPLICATION = 'websecurity.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'web',          # Replace with your database name
+        'NAME': 'mydb',          # Replace with your database name
         'USER': 'root',          # Your database user
         'PASSWORD': '',          # Your database password (leave empty if none)
         'HOST': '127.0.0.1',     # Host, usually localhost
