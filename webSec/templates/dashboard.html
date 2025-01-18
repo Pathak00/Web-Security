@@ -25,7 +25,7 @@
             align-items: center;
         }
 
-        nav .user-info {
+        /* nav .user-info {
             display: flex;
             align-items: center;
         }
@@ -39,6 +39,34 @@
 
         nav .user-info span {
             margin-right: 10px;
+        } */
+
+        nav.navbar {
+            background-color: #17153B;
+            padding: 2rem;
+
+        }
+
+        .navbar-brand {
+            color: #ffffff;
+            font-size: 1rem;
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        .navbar-brand .motto {
+            font-size: 0.9rem;
+            font-weight: 400;
+            color: #aaa;
+        }
+
+        .navbar-nav .nav-link {
+            color: #C8ACD6;
+            font-size: 1.1rem;
+        }
+
+        .navbar-nav .nav-link:hover {
+            color: #433D8B;
         }
 
         nav .logout-btn {
@@ -185,10 +213,11 @@
 
 <body>
     <!-- Navbar -->
-    <nav>
-        <div class="user-info">
-            <img id="profilePic" alt="Profile Picture">
-            <span id="userName">User</span>
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">WebSecurity
+                <div class="motto">Scan Vulnerabilities, Stay Safe</div>
+            </a>
         </div>
         <button class="logout-btn" onclick="logout()" href="{%url 'user_logout'%}">
             <i class="fas fa-sign-out-alt"></i> Logout
@@ -198,6 +227,7 @@
     <main>
         <!-- Vulnerability Scan Report Table -->
         <section class="main-content">
+            <h2> <span id="userName" style="text-align: center;">User</span></h2>
             <h2>Vulnerability Scan Reports</h2>
             <table>
                 <thead>
@@ -236,13 +266,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script> <!-- jsPDF library -->
     <script>
         // Example user data (in practice, this would come from a backend)
-        const userData = {
-            name: "John Doe",
-            email: "john@example.com",
-            joinDate: "January 1, 2023",
-            profilePic: "profile.jpg" // Update this to the actual profile picture URL
-        };
-
+        const reportData = JSON.parse('{{ pdf_response|escapejs }}');
 
 
         // Example scan report data (in practice, this would come from a backend)
@@ -252,36 +276,38 @@
                 scanDate: "October 30, 2024",
                 vulnerability: "SQL Injection",
                 severity: "High"
-            },
-            {
-                website: "another-example.com",
-                scanDate: "October 29, 2024",
-                vulnerability: "Cross-site Scripting (XSS)",
-                severity: "Medium"
-            },
-            {
-                website: "third-site.com",
-                scanDate: "October 28, 2024",
-                vulnerability: "Cross-site Request Forgery (CSRF)",
-                severity: "Low"
             }
         ];
 
         // Populate user data on page load
-        document.getElementById('userName').innerText = userData.name;
-        document.getElementById('profilePic').src = userData.profilePic;
+        var username = "{{ username }}";
 
+        document.getElementById('userName').innerText = username;
+        //document.getElementById('profilePic').src = userData.profilePic;
+        console.log("testreportData");
+        console.log(reportData);
         // Populate scan report table dynamically
+        const vulnerabilities = reportData.vulnerabilities
+            .map(vuln => vuln.vulnerabilities.map(vulnDetails => `<p><strong>CVE:</strong> ${vulnDetails.CVE}, <strong>Description:</strong> ${vulnDetails.description}</p>`).join(''))
+            .join('') && reportData.vulnerabilities.length > 0 ? reportData.vulnerabilities : "Not Found";
+
+        const databases = reportData.databases && reportData.databases.length > 0 ? reportData.databases : "Not Found";
+        // const vulnerabilities = report.vulnerabilities && report.vulnerabilities.length > 0 ? report.vulnerabilities : "Not Found";
+
+
+        const headersOutput = JSON.stringify(reportData.headers_output, null, 2);
+        console.log(headersOutput);
+
         const scanReportTable = document.getElementById('scanReportTable');
         scanReports.forEach(report => {
             const row = document.createElement('tr');
             row.innerHTML = `
-                <td>${report.website}</td>
-                <td>${report.scanDate}</td>
-                <td>${report.vulnerability}</td>
+                <td>${reportData.domain_url}</td>
+                <td>${headersOutput}</td>
+                <td>${databases} ${vulnerabilities}</td>
                 <td class="${getSeverityClass(report.severity)}">${report.severity}</td>
                 <td>
-                    <button class="view-btn" onclick="viewReport('${report.website}', '${report.scanDate}', '${report.vulnerability}', '${report.severity}')">View</button>
+                    <button class="view-btn" onclick="viewReport('${report.domain_url}', '${report.headersOutput}', '${report.vulnerabilities}', '${report.severity}')">View</button>
                     <button class="download-btn" onclick="downloadPDF('${report.website}', '${report.scanDate}', '${report.vulnerability}', '${report.severity}')">Download</button>
                 </td>
             `;
@@ -304,6 +330,7 @@
 
         // View report in a modal
         function viewReport(website, scanDate, vulnerability, severity) {
+            console.log('${website}');
             const modalContent = `
                 <strong>Website:</strong> ${website} <br>
                 <strong>Scan Date:</strong> ${scanDate} <br>
