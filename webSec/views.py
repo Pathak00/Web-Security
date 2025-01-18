@@ -12,6 +12,7 @@ from .forms import CreateUserForm
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth import login as auth_login
 from .headers import scan_website_headers
+from .headers import check_website_headers
 from io import BytesIO
 from reportlab.pdfgen import canvas
 import os
@@ -25,6 +26,8 @@ from bs4 import BeautifulSoup
 from flask import Flask, Response
 from django.shortcuts import redirect
 import json
+from .models import VulnerabilityScanReport
+from django.contrib.auth.decorators import login_required
 
 
 def land_page(request):
@@ -44,9 +47,9 @@ def land_page(request):
                 result_html=''
                 # Detect JavaScript libraries using scanner.py
                 libraries = get_javascript_libraries(domain_url)
+               
                 vulnerabilities = check_vulnerabilities(libraries)
-                print("test")
-                print(vulnerabilities)
+                
                 # Format vulnerabilities into an HTML string for display
                 vulnerabilities_html = ""
                 for vuln in vulnerabilities:
@@ -74,17 +77,29 @@ def land_page(request):
 
                 # Scan website headers
                 headers_output = scan_website_headers(domain_url)
+                
+                severity=check_website_headers(domain_url)
+                
                 pdf_response = generate_pdf(domain_url, headers_output, vulnerabilities, result_html)
-                print(pdf_response)
+             
                 if request.user.is_authenticated:
                 # If the user is authenticated, return the PDF inline
                     # response = HttpResponse(pdf_response, content_type='application/pdf')
                     # response['Content-Disposition'] = 'inline; filename="report.pdf"'
                     context = {
                         'username': request.user.username,
-                        'pdf_response': json.dumps(pdf_response)  # Passing the raw dictionary to the template
+                        'pdf_response': json.dumps(pdf_response),
+                         'severity':json.dumps(severity)                # Passing the raw dictionary to the template
                         }
-                  
+                     
+                    report = VulnerabilityScanReport(
+                    username=context['username'],
+                    pdf_response=json.loads(context['pdf_response']),
+                    domain=domain_url,# Convert JSON string back to dictionary
+                    severity=json.loads(context['severity'])  # Convert JSON string back to dictionary
+                    )
+                    report.save()
+                    
                     return render(request,'dashboard.html',context)
                     # return response
                 else:
@@ -126,120 +141,6 @@ def generate_pdf(domain_url, headers_output, vulnerabilities, result_html):
     
     # If not authenticated, redirect to the login page
   
-
-    # Convert the data to JSON
-    # report_json = json.dumps(report_data, indent=4)
-    # print(report_json)
-    # If the request is expecting a JSON response (e.g., for AJAX), return the JSON
-    # if isinstance(domain_url, str) and domain_url == "json":
-    #     return JsonResponse(report_data)
-    # return JsonResponse(report_data)
-    # # Create an in-memory buffer to hold the PDF
-    # buffer = BytesIO()
-    
-    # # Create a canvas with the buffer and A4 page size
-    # c = canvas.Canvas(buffer, pagesize=A4)
-    # width, height = A4  # Width and height of A4 page in points (595.276 x 841.890)
-
-    # # Title
-    # c.setFont("Helvetica-Bold", 16)
-    # c.drawString(100, height - 30, f"Security Report for:")
-    # c.drawString(100, height - 50, f"{domain_url}")
-
-    # # Set the initial Y position for content
-    # y_position = height - 70  # Adjust this if needed based on your layout
-    # margin_left = 100
-
-    # # Add website headers section
-    # c.setFont("Helvetica", 12)
-    # c.drawString(margin_left, y_position, "Website Headers:")
-    # y_position -= 20  # Leave space below the title
-
-    # # Add headers from the `headers_output`
-    # for header, value in headers_output.items():
-    #     if y_position < 100:  # Check if we're nearing the bottom of the page
-    #         c.showPage()  # Start a new page if space is running out
-    #         c.setFont("Helvetica-Bold", 16)
-    #         c.drawString(margin_left, height - 50, f"Security Report for {domain_url}")
-    #         y_position = height - 70  # Reset Y position for the new page
-
-    #     # Print each header-value pair
-    #     c.setFont("Helvetica", 10)
-    #     c.drawString(margin_left, y_position, f"{header}: {value}")
-    #     y_position -= 15  # Move down for the next header
-
-    # # Add vulnerabilities section
-   
-    # y_position -= 10  # Add some space between sections
-    # c.setFont("Helvetica-Bold", 12)
-    # c.drawString(margin_left, y_position, "Vulnerabilities Found:")
-    # y_position -= 20  # Leave space below the title
-    # c.setFont("Helvetica", 10)
-    # if vulnerabilities:
-    #     # Loop through vulnerabilities and add them to the report
-    #     for vuln in vulnerabilities:
-    #         if y_position < 100:  # Check if we're nearing the bottom of the page
-    #             c.showPage()  # Start a new page if space is running out
-    #             c.setFont("Helvetica-Bold", 16)
-    #             c.drawString(margin_left, height - 50, f"Security Report for {domain_url}")
-    #             y_position = height - 70  # Reset Y position for the new page
-
-    #         c.drawString(margin_left, y_position, f"Library: {vuln['library']}")
-    #         y_position -= 15  # Move down after printing the library
-
-    #         # Loop through each issue in the vulnerability and add it
-    #         for issue in vuln['vulnerabilities']:
-    #             if y_position < 100:  # Check if we need a new page
-    #                 c.showPage()
-    #                 c.setFont("Helvetica-Bold", 16)
-    #                 c.drawString(margin_left, height - 50, f"Security Report for {domain_url}")
-    #                 y_position = height - 70  # Reset Y position for the new page
-    #             c.drawString(margin_left + 20, y_position, f"CVE: {issue['CVE']}, {issue['description']}")
-    #             y_position -= 15  # Move down after each issue
-    # else:
-    #     c.drawString(margin_left + 20, y_position, "No Vulnerabilities Detected.")
- 
-    # # Add Available Databases section from SQLMap results
-    # y_position -= 20  # Space between sections
-    # c.setFont("Helvetica-Bold", 12)
-    # c.drawString(margin_left, y_position, "Available Databases:")
-    # y_position -= 15  # Move down after the section title
-    # c.setFont("Helvetica", 10)
-
-
-    # if result_html:
-    #     # Use BeautifulSoup to parse the HTML
-    #     soup = BeautifulSoup(result_html, 'html.parser')
-
-    #     # Find all <li> elements inside the <ul>
-    #     databases = [li.get_text(strip=True) for li in soup.find_all('li')]
-
-    #     # If databases were found, print them to the PDF
-    #     if databases:
-    #         for db_name in databases:
-    #             if y_position < 100:  # Check if we need a new page
-    #                 c.showPage()  # Start a new page if needed
-    #                 y_position = height - 50  # Reset y_position for the new page
-    #             c.drawString(margin_left + 20, y_position, db_name)
-    #             y_position -= 15  # Move down after each database name     
-    #     else:
-    #         # If no databases found, print "No Database Detected"
-    #         if y_position < 100:  # Check if we need a new page
-    #             c.showPage()  # Start a new page if needed
-    #             y_position = height - 50  # Reset y_position for the new page
-    #         c.drawString(margin_left + 20, y_position, "No Database Detected.")   
-    
-
-    #     # Finalize the PDF
-    # c.showPage()
-    # c.save()
-
-    # # Go to the beginning of the buffer and return the PDF as a response
-    # buffer.seek(0)
-    # return HttpResponse(buffer, content_type='application/pdf')
-
-
-
    
 def dashboard(request):
     if request.method == 'POST':
@@ -344,3 +245,77 @@ def run_sqlmap(url, parameters=None, timeout=300):
         return None, "Execution was interrupted by the user.", []
     except Exception as e:
         return None, f"Error running sqlmap: {e}", []
+    
+
+# def user_scan_reports(request):
+#     # Fetch the scan reports for the logged-in user
+#     user_reports = VulnerabilityScanReport.objects.filter(username=request.user.username)
+
+#     # Prepare the reports to be passed to the template
+#     reports_data = []
+#     for report in user_reports:
+#         vulnerabilities = report.get_pdf_response().get('vulnerabilities', [])
+#         severity = report.get_severity()
+
+#         reports_data.append({
+#             'domain': report.domain,
+#             'severity': severity,
+#             'vulnerabilities': vulnerabilities,
+#             'created_at': report.created_at,
+#             'pdf_response': report.get_pdf_response(),  # You may want to return this to display PDF as well
+#         })
+
+#     return render(request, 'dashboard.html', {
+#         'reports_data': reports_data,
+#         'username': request.user.username,
+#     })
+    
+# def vulnerability_reports(request):
+#     # Fetch reports for the logged-in user
+#     user_reports = VulnerabilityScanReport.objects.filter(username=request.user.username)
+
+#     print("user_reports")
+#     print(user_reports)
+#     # Prepare the data to pass to the template
+#     reports_data = []
+#     for report in user_reports:
+#         pdf_response = report.get_pdf_response()
+#         severity = report.get_severity()
+        
+#         reports_data.append({
+#             'domain': report.domain,
+#             'pdf_response': pdf_response,  # Parsed JSON object for PDF response
+#             'severity': severity,  # Parsed JSON object for severity
+#             'created_at': report.created_at.strftime('%B %d, %Y'),  # Date format
+#         })
+
+#     # Render the template with the reports data
+#     return render(request, 'dashboard.html', {
+#         'username': request.user.username,
+#         'reports_data': reports_data,  # Passing data to the frontend
+#     })
+    
+
+
+# def fetch_scan_reports(request):
+#     reports = VulnerabilityScanReport.objects.all()
+#     data = []
+#     print(reports)
+#     for report in reports:
+#         try:
+#             pdf_response = json.loads(report.pdf_response) if report.pdf_response else {}
+#             severity = json.loads(report.severity) if report.severity else {}
+#         except json.JSONDecodeError:
+#             pdf_response = {"error": "Invalid JSON in pdf_response"}
+#             severity = {"error": "Invalid JSON in severity"}
+
+#         data.append({
+#             "id": report.id,
+#             "username": report.username,
+#             "domain_url": report.domain,
+#             "pdf_response": pdf_response,
+#             "severity": severity,
+#             "created_at": report.created_at.strftime("%Y-%m-%d %H:%M:%S"),
+#         })
+
+#     return JsonResponse(data, safe=False)
