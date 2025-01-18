@@ -30,6 +30,9 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
+# settings.py
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+
 
 AUTHENTICATION_BACKENDS = [
   
@@ -102,7 +105,7 @@ WSGI_APPLICATION = 'websecurity.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'mydb',          # Replace with your database name
+        'NAME': 'web',          # Replace with your database name
         'USER': 'root',          # Your database user
         'PASSWORD': '',          # Your database password (leave empty if none)
         'HOST': '127.0.0.1',     # Host, usually localhost
