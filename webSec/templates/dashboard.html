@@ -399,40 +399,64 @@
                 .then(data => {
                     const scanReportTable = document.getElementById('scanReportTable');
                     data.forEach(report => {
-                        console.log(report.pdf_response);
-                        const pdfResponse = JSON.stringify(report.pdf_response);
-                        const parsedResponse = JSON.parse(pdfResponse);
-                        const vulnerabilities = report.vulnerabilities;
-                        const databases = parsedResponse.databases;
-                        const headersOutput = parsedResponse.headers_output;
-                        const severity = report.severity;
 
-                        console.log("1pdfres", pdfResponse);
+                        // const pdfResponse = JSON.stringify(report.pdf_response);
+                        let pdfResponse = report.pdf_response;
+                        console.log("before pdfResponse", pdfResponse);
+                        cleanedString = pdfResponse.replace(/"/g, "");
+                        pdfResponse = cleanedString.replace(/'/g, '"');
+                        // pdfResponse = pdfResponse.replace(/,\s*([}\]])/g, '$1');
+
+                        console.log("after pdfResponse", pdfResponse);
+                        const parsedResponse = JSON.parse(pdfResponse);
+                        console.log("object parsed", parsedResponse);
+
+                        const headersOutput = parsedResponse.headers_output;
+                        const Databases = parsedResponse.databases;
+                        // let databasesContent = '';
+
+
+                        // Databases.forEach(database => {
+                        //     databasesContent += `<strong>Database:</strong> ${database}<br>`;
+                        // });
+                        let headersContent = '';
+
+
+
+                        // Loop through headers_output and concatenate each key-value pair into a string
+                        for (let key in headersOutput) {
+                            if (headersOutput.hasOwnProperty(key)) {
+                                headersContent += `<strong>${key}:</strong> ${headersOutput[key]}<br>`;
+                            }
+                        }
 
                         const row = document.createElement('tr');
                         row.innerHTML = `
-                        <td>${report.domain_url}</td>
-                        <td>${report.created_at}</td>
-                        <td>${pdfResponse}</td>
-                        <td>${severity}</td>
-                        <td>
-                           <button class="view-btn" 
-                                data-domain-url="${report.domain_url}"
-                                data-created-at="${report.created_at}"
-                                data-pdf-response="${pdfResponse}"
-                                data-severity="${severity}"
-                                onclick="viewReport(this)">
-                                View
-                            </button>
+    <td>${report.domain_url}</td>
+    <td>${report.created_at}</td>
+    <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+        ${headersContent}
+    </td>
+    <td>${report.severity}</td>
+    <td>
+        <button class="view-btn" 
+            data-domain-url="${report.domain_url}"
+            data-created-at="${report.created_at}"
+            data-pdf-response="${headersContent}"
+            data-severity="${report.severity}"
+            onclick="viewReport(this)">
+            View
+        </button>
 
-                            <button class="download-btn" 
-                                onclick="downloadPDF('${report.domain_url}', '${report.created_at}', '${pdfResponse}','${report.severity}')">Download</button>
+        <button class="download-btn" 
+            onclick="downloadPDF('${report.domain_url}', '${report.created_at}', '${headersContent}','${Databases}', '${report.severity}')">Download</button>
+        
+        <button class="delete-btn" 
+            value="${report.domain_url}" 
+            onclick="deleteReport(this)">Delete</button>
+    </td>
+`;
 
-                            <button class="delete-btn" 
-                                value="${report.domain_url}" 
-                                onclick="deleteReport(this)">Delete</button>
-                        </td>
-                    `;
                         scanReportTable.appendChild(row);
                     });
                 })
@@ -448,57 +472,41 @@
             const pdfResponse = button.getAttribute('data-pdf-response');
             const severity = button.getAttribute('data-severity');
 
-            console.log("pdfResponse", pdfResponse);
 
 
-            let headersOutput = 'No headers found'; // Default value for headers
-
-            try {
-                // Attempt to parse pdfResponse if it's a valid JSON string
-                const parsedPdfResponse = JSON.parse(pdfResponse);
-                console.log("Parsed pdfResponse:", parsedPdfResponse);
-
-                // Check if headers_output exists in the parsed response
-                if (parsedPdfResponse && parsedPdfResponse.headers_output) {
-                    headersOutput = JSON.stringify(parsedPdfResponse.headers_output, null, 2); // Stringify for display
-                }
-            } catch (error) {
-                console.error('Invalid JSON in pdfResponse:', error);
-                headersOutput = 'Failed to parse headers_output'; // Fallback message
-            }
             // Modal content structure
             const modalContent = `
-            <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 20px; background-color: #ffffff; border-radius: 10px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); max-width: 600px; margin: auto; overflow-y: auto;">
-                <h3 style="color: #34495e;">Report Details</h3>
-                <div style="margin-bottom: 20px;">
-                    <strong style="font-weight: bold; color: #34495e;">Website:</strong> 
-                    <span style="color: #3498db;">${domainUrl}</span>
-                </div>
+    <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 20px; background-color: #ffffff; border-radius: 10px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); max-width: 600px; margin: auto; height: 400px; overflow-y: auto;">
+        <h3 style="color: #34495e;">Report Details</h3>
+        <div style="margin-bottom: 20px;">
+            <strong style="font-weight: bold; color: #34495e;">Website:</strong> 
+            <span style="color: #3498db;">${domainUrl}</span>
+        </div>
 
-                <div style="margin-bottom: 20px;">
-                    <strong style="font-weight: bold; color: #34495e;">Scan Date:</strong> 
-                    <span style="color: #7f8c8d;">${createdAt}</span>
-                </div>
+        <div style="margin-bottom: 20px;">
+            <strong style="font-weight: bold; color: #34495e;">Scan Date:</strong> 
+            <span style="color: #7f8c8d;">${createdAt}</span>
+        </div>
 
-                <div style="margin-bottom: 20px;">
-                    <strong style="font-weight: bold; color: #34495e;">Headers Found:</strong> 
-                    <pre style="background-color: #ecf0f1; padding: 15px; border-radius: 8px; font-family: monospace; white-space: pre-wrap; word-wrap: break-word; font-size: 14px;">
-                        ${headersOutput}
-                    </pre>
-                </div>
+        <div style="margin-bottom: 20px;">
+            <strong style="font-weight: bold; color: #34495e;">Headers Found:</strong> 
+            <pre style="background-color: #ecf0f1; padding: 15px; border-radius: 8px; font-family: monospace; white-space: pre-wrap; word-wrap: break-word; font-size: 14px;">${pdfResponse}
+            </pre>
+        </div>
 
-                <div style="margin-bottom: 30px;">
-                    <strong style="font-weight: bold; color: #34495e;">Severity Level:</strong> 
-                    <span style="color: ${getSeverityColor(severity)}; font-weight: bold; font-size: 16px;">${severity}</span>
-                </div>
+        <div style="margin-bottom: 30px;">
+            <strong style="font-weight: bold; color: #34495e;">Severity Level:</strong> 
+            <span style="color: ${getSeverityColor(severity)}; font-weight: bold; font-size: 16px;">${severity}</span>
+        </div>
 
-                <hr style="border-top: 2px solid #ecf0f1; margin-bottom: 20px;" />
+        <hr style="border-top: 2px solid #ecf0f1; margin-bottom: 20px;" />
 
-                <div style="text-align: center;">
-                    <button onclick="closeModal()" style="padding: 12px 25px; background-color: #3498db; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px;">Close</button>
-                </div>
-            </div>
-        `;
+        <div style="text-align: center;">
+            <button onclick="closeModal()" style="padding: 12px 25px; background-color: #3498db; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px;">Close</button>
+        </div>
+    </div>
+`;
+
 
 
 
@@ -566,10 +574,19 @@
 
         }
 
-        // Function to download the PDF
-        function downloadPDF(website, created_at, pdfResponse, severity) {
+        function stripHTMLTags(str) {
+            return str.replace(/<\/?[^>]+(>|$)/g, ""); // This regex removes all HTML tags
+        }
+
+        function downloadPDF(website, created_at, pdfResponse, databases, severity) {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
+
+            // Strip the HTML tags from pdfResponse to display plain text
+            const plainPdfResponse = stripHTMLTags(pdfResponse);
+            const cleanDatabases = (databases && databases.trim() && databases !== "No any Databases Found")
+                ? stripHTMLTags(databases)
+                : "No databases detected";
 
             // Set the document to A4 size
             doc.setPage(1);
@@ -586,26 +603,24 @@
             doc.setTextColor(0, 0, 0); // Black for general info
             doc.text("Website:", 20, yOffset);
             doc.setTextColor(0, 102, 204); // Blue for the website URL
-            doc.text(`${created_at}`, 60, yOffset);
-            yOffset += 15; // Space after Website section
+            doc.text(`${website}`, 60, yOffset);
+            yOffset += 20; // Increased space after Website section
 
             // Scan Date Information
             doc.setTextColor(0, 0, 0); // Black for general info
             doc.text("Scan Date:", 20, yOffset);
             doc.setTextColor(0, 102, 204); // Blue for the date
-            doc.text(`${scanDate}`, 60, yOffset);
-            yOffset += 15; // Space after Scan Date section
+            doc.text(`${created_at}`, 60, yOffset);
+            yOffset += 20; // Increased space after Scan Date section
 
-            // Vulnerability Information
+            // Vulnerability Information - Display plain text
             doc.setTextColor(0, 0, 0); // Black for general info
             doc.text("Vulnerabilities:", 20, yOffset);
             doc.setTextColor(255, 0, 0); // Red for vulnerabilities
-            // const plainVulnerability = stripHTMLTags(vulnerabilities);
-            const plainVulnerability = `${pdfResponse}`;
             const maxWidth = 130;
-            const wrappedText = doc.splitTextToSize(plainVulnerability, maxWidth);
+            const wrappedText = doc.splitTextToSize(plainPdfResponse, maxWidth);
             doc.text(wrappedText, 60, yOffset);
-            yOffset += wrappedText.length * 5 + 10; // Space after Vulnerabilities section
+            yOffset += wrappedText.length * 5 + 20; // Space after Vulnerabilities section (increased space)
 
             // Severity Information
             doc.setTextColor(0, 0, 0); // Black for general info
@@ -618,16 +633,7 @@
             // Databases Information - Ensure it's an array before using .join
             doc.setTextColor(0, 0, 0); // Black for general info
             doc.text("Databases:", 20, yOffset);
-
-            if (Array.isArray(databases)) {
-                doc.setTextColor(0, 102, 204); // Blue for database list
-                const plainDatabases = databases.join("\n");
-                const wrappedDatabases = doc.splitTextToSize(plainDatabases, maxWidth);
-                doc.text(wrappedDatabases, 60, yOffset);
-            } else {
-                doc.setTextColor(255, 0, 0); // Red for error message
-                doc.text("[*] acuart ,[*] information_schema", 60, yOffset);
-            }
+            doc.text(`${cleanDatabases}`, 60, yOffset);
             yOffset += 20; // Space after Databases section
 
             // Add a separator line after the details
@@ -645,6 +651,8 @@
             // Save the PDF
             doc.save(`${website}_scan_report.pdf`);
         }
+
+
 
         function stripHTMLTags(str) {
             const doc = new DOMParser().parseFromString(str, 'text/html');
