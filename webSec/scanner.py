@@ -58,17 +58,20 @@ def extract_version(library_name, url):
     return None
 
 def get_javascript_libraries(url):
+    print("test urlin lir",url)
     """Extract JavaScript libraries from a given URL and check if they are outdated."""
     libraries = [] 
     outdated_libraries = []
     
     try:
         response = requests.get(url)
-        response.raise_for_status()  # Check for HTTP errors
+        response.raise_for_status()
+        print("Response")
+        print(response)
         soup = BeautifulSoup(response.text, 'html.parser')
         scripts = soup.find_all('script')
-       # print("scripts")
-       # print(scripts)
+        print("scripts")
+        print(scripts)
         for script in scripts:
             src = script.get('src', '')
             if src:
@@ -79,19 +82,11 @@ def get_javascript_libraries(url):
                         if version:
                             # Add to libraries list
                             libraries.append(src)
-
-                            # Check if the library is outdated
-                            if version != LATEST_VERSIONS[lib]:
-                                outdated_libraries.append({
-                                    'library': lib,
-                                    'found_version': version,
-                                    'latest_version': LATEST_VERSIONS[lib],
-                                    'url': src
-                                })
-    
+                            
     except requests.RequestException as e:
-        print(f"Error fetching the URL: {e}")
-
+       libraries=[]
+       return libraries
+        # print(f"Error fetching the URL: {e}")
 
     return libraries
 
@@ -120,17 +115,17 @@ def check_vulnerabilities(library_list):
             })
         elif 'vue' in library:
             library_vulnerabilities.append({
-                'CVE': 'CVE-2020-11022',
+                'CVE': 'CVE-2011-3385',
                 'description': 'Cross-site scripting (XSS) vulnerability in Vue.js versions before 2.6.12.'
             })
         elif 'react' in library:
             library_vulnerabilities.append({
-                'CVE': 'CVE-2020-7608',
+                'CVE': 'CVE-2020-11022',
                 'description': 'Potential XSS vulnerability in React.js before version 16.12.0.'
             })
         elif 'angular' in library:
             library_vulnerabilities.append({
-                'CVE': 'CVE-2020-8115',
+                'CVE': 'CVE-2020-7927',
                 'description': 'Security vulnerability in Angular before version 9.1.4.'
             })
         elif 'lodash' in library:
@@ -140,7 +135,7 @@ def check_vulnerabilities(library_list):
             })
         elif 'axios' in library:
             library_vulnerabilities.append({
-                'CVE': 'CVE-2021-3749',
+                'CVE': 'CVE-2020-28168',
                 'description': 'Potential SSRF vulnerability in Axios versions before 0.21.1.'
             })
         elif 'moment' in library:
@@ -217,4 +212,4 @@ def check_vulnerabilities(library_list):
             })
     # print("vulnerabilities result")
     # print(vulnerabilities)
-    return vulnerabilities
+    return  vulnerabilities

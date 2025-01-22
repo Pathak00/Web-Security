@@ -13,6 +13,7 @@
             margin: 0;
             padding: 0;
             background-color: #f4f4f4;
+
         }
 
         /* Navbar styles */
@@ -92,12 +93,13 @@
 
         footer {
             text-align: center;
-            padding: 10px;
+            padding: 5px;
             background: #1F1A3D;
             color: white;
             position: fixed;
             bottom: 0;
             width: 100%;
+
         }
 
         table {
@@ -160,6 +162,15 @@
         .view-btn,
         .download-btn {
             background-color: #28a745;
+            color: white;
+            padding: 5px 10px;
+            border: none;
+            cursor: pointer;
+            border-radius: 3px;
+        }
+
+        .delete-btn {
+            background-color: #d61d27;
             color: white;
             padding: 5px 10px;
             border: none;
@@ -240,10 +251,90 @@
         thead {
             background-color: #f1f1f1;
         }
+
+        .modal-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        /* Style for the modal box */
+        .modal-box {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            width: 300px;
+        }
+
+        /* Error message style */
+        .error-message {
+            color: red;
+            font-weight: bold;
+        }
+
+        /* Success message style */
+        .success-message {
+            color: green;
+            font-weight: bold;
+        }
+
+        /* Close button style */
+        .close-button {
+            background-color: #ccc;
+            border: none;
+            border-radius: 5px;
+            padding: 5px 10px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .close-button:hover {
+            background-color: #bbb;
+        }
     </style>
 </head>
 
 <body>
+    <!-- Error Modal -->
+    {% if error_message %}
+    <div class="modal-background" id="error-modal">
+        <div class="modal-box">
+            <p class="error-message">{{ error_message }}</p>
+            <button class="close-button" onclick="Modelclose('error-modal')">Close</button>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Success Modal -->
+    {% if success_message %}
+    <div class="modal-background" id="success-modal">
+        <div class="modal-box">
+            <p class="success-message">{{ success_message }}</p>
+            <button class="close-button" onclick="Modelclose('success-modal')">Close</button>
+        </div>
+    </div>
+    {% endif %}
+
+    <script>function Modelclose(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.style.display = 'none';  // Hide the modal
+            } else {
+                console.error(`Modal with ID "${modalId}" not found.`);
+            }
+        }
+    </script>
+
+
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark">
         <div class="container">
@@ -259,14 +350,14 @@
     <main>
         <!-- Vulnerability Scan Report Table -->
         <section class="main-content">
-            <h2> <span id="userName" style="text-align: center;">User</span></h2>
+            <h2> <span id="userName" style="text-align: center;">{{username}}</span></h2>
             <h2>Vulnerability Scan Reports</h2>
             <table>
                 <thead>
                     <tr>
                         <th>Website</th>
                         <th>Scan Date</th>
-                        <th>Vulnerability Found</th>
+                        <th>Headers Found</th>
                         <th>Severity</th>
                         <th>Actions</th>
                     </tr>
@@ -280,9 +371,9 @@
 
     <!-- Modal for Viewing Report Details -->
     <div id="reportModal" class="modal">
-        <div class="modal-content">
+        <div class="modal-content" style="margin: 50px;">
             <div class="modal-header">
-                <h3>Scan Report Details</h3>
+                <h4>WebSecurity Report Details</h4>
                 <span class="modal-close" onclick="closeModal()">&times;</span>
             </div>
             <div class="modal-body">
@@ -291,298 +382,55 @@
         </div>
     </div>
 
+
+
     <footer>
         <p>&copy; 2024 WebSecurity. All rights reserved.</p>
     </footer>
 
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script> <!-- jsPDF library -->
-    <!-- <script>
-        // Example user data (in practice, this would come from a backend)
-        const reportData = JSON.parse('{{ pdf_response|escapejs }}');
-        const severityValue = JSON.parse('{{ severity|escapejs }}');
 
-
-        // Example scan report data (in practice, this would come from a backend)
-        const scanReports = [
-            {
-                website: "example.com",
-                scanDate: "October 30, 2024",
-                vulnerability: "SQL Injection",
-                severity: "High"
-            }
-        ];
-
-        // Populate user data on page load
-        var username = "{{ username }}";
-        var severity = "{{ severity }}";
-        console.log(severity)
-        console.log("hello");
-
-        document.getElementById('userName').innerText = username;
-        //document.getElementById('profilePic').src = userData.profilePic;
-        console.log("testreportData");
-        console.log(reportData);
-        // Populate scan report table dynamically
-        const vulnerabilities = reportData.vulnerabilities && reportData.vulnerabilities.length > 0
-            ? reportData.vulnerabilities.map(vuln => {
-                return vuln.vulnerabilities && vuln.vulnerabilities.length > 0
-                    ? vuln.vulnerabilities.map(vulnDetails => {
-                        return `<p><strong>CVE:</strong> ${vulnDetails.CVE}, <strong>Description:</strong> ${vulnDetails.description}</p>`;
-                    }).join('')
-                    : "No vulnerabilities found";
-            }).join('')
-            : "Not Found";
-
-
-        const databases = reportData.databases && reportData.databases.length > 0 ? reportData.databases : "Not Found";
-        //const vulnerabilities = reportData.vulnerabilities && reportData.vulnerabilities.length > 0 ? reportData.vulnerabilities : "Not Found";
-
-
-        const headersOutput = JSON.stringify(reportData.headers_output, null, 2);
-        console.log(headersOutput);
-        const currentDate = new Date().toLocaleDateString()
-
-        const scanReportTable = document.getElementById('scanReportTable');
-        scanReports.forEach(report => {
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td>${reportData.domain_url}</td>
-                <td>${currentDate}</td>
-                <td>${databases} ${vulnerabilities}</td>
-                <td>${severity}</td>
-                <td>
-                    <button class="view-btn" onclick="viewReport('${report.domain_url}', '${report.headersOutput}', '${report.vulnerabilities}', '${report.severity}')">View</button>
-                    <button class="download-btn" onclick="downloadPDF('${report.website}', '${report.scanDate}', '${report.vulnerability}', '${report.severity}')">Download</button>
-                </td>
-            `;
-            scanReportTable.appendChild(row);
-        });
-
-        // Function to assign a class based on severity level
-        function getSeverityClass(severity) {
-            switch (severity) {
-                case 'High':
-                    return 'severity-high';
-                case 'Medium':
-                    return 'severity-medium';
-                case 'Low':
-                    return 'severity-low';
-                default:
-                    return '';
-            }
-        }
-
-        // View report in a modal
-        function viewReport(website, scanDate, vulnerability, severity) {
-            // Log the website URL for debugging purposes
-            console.log(website);
-
-            // Format the modal content with better structure, colors, and horizontal lines
-            const modalContent = `
-        <div style="font-family: Arial, sans-serif; padding: 20px; background-color: #f9f9f9; border-radius: 8px; width: 400px;">
-            <h2 style="color: #333; font-size: 1.8em; margin-bottom: 10px; text-align: center;">Scan Report</h2>
-            
-            <hr style="border-top: 1px solid #ccc; margin-bottom: 15px;" />
-
-            <div style="margin-bottom: 10px;">
-                <strong style="font-weight: bold; color: #555;">Website:</strong> 
-                <span style="color: #007bff;">${reportData.domain_url}</span>
-            </div>
-
-            <div style="margin-bottom: 10px;">
-                <strong style="font-weight: bold; color: #555;">Scan Date:</strong> 
-                <span style="color: #333;">${currentDate}</span>
-            </div>
-
-            <hr style="border-top: 1px solid #ccc; margin-bottom: 15px;" />
-
-            <div style="margin-bottom: 10px;">
-                <strong style="font-weight: bold; color: #555;">Vulnerability Found:</strong> 
-                <span style="color: #d9534f; font-weight: bold;">${vulnerabilities}</span>
-            </div>
-    
-            <div style="margin-bottom: 10px;">
-                <strong style="font-weight: bold; color: #555;">Database Found:</strong> 
-                <span style="color: #d9534f; font-weight: bold;">${databases}</span>
-            </div>
-
-            <div style="margin-bottom: 20px;">
-                <strong style="font-weight: bold; color: #555;">Severity Level:</strong> 
-                <span style="color: ${getSeverityColor(severity)}; font-weight: bold;">${severity}</span>
-            </div>
-            
-            <hr style="border-top: 1px solid #ccc; margin-top: 15px;" />
-
-            <div style="text-align: center; margin-top: 20px;">
-                <button onclick="closeModal()" style="padding: 10px 20px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer;">Close</button>
-            </div>
-        </div>
-    `;
-
-            // Insert the modal content into the modal container
-            document.getElementById('modalContent').innerHTML = modalContent;
-
-            // Show the modal
-            document.getElementById('reportModal').style.display = 'flex';
-        }
-
-        // Helper function to get color based on severity level
-        function getSeverityColor(severity) {
-            switch (severity) {
-                case 'High':
-                    return '#d9534f'; // Red for High severity
-                case 'Medium':
-                    return '#f0ad4e'; // Orange for Medium severity
-                case 'Low':
-                    return '#5bc0de'; // Blue for Low severity
-                default:
-                    return '#555'; // Default color for no severity
-            }
-        }
-
-        // Function to close the modal
-        function closeModal() {
-            document.getElementById('reportModal').style.display = 'none';
-        }
-
-        // Logout function
-        function logout() {
-            // Redirect to login page or perform other logout actions
-            window.location.href = "{% url 'user_logout' %}";
-
-        }
-
-        // Function to download PDF report
-        function downloadPDF(website, scanDate, vulnerability, severity) {
-            // Initialize jsPDF
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-
-            // Set the document to A4 size
-            doc.setPage(1);
-            doc.setFontSize(18);
-            doc.setFont("helvetica", "bold");
-            doc.text("WebSecurity Scan Report", 20, 20);
-
-            let yOffset = 30;
-
-            // Website Information
-            doc.setFontSize(12);
-            doc.setFont("helvetica", "normal");
-            doc.setTextColor(0, 0, 0); // Black text for general info
-            doc.text("Website:", 20, yOffset);
-            doc.setTextColor(0, 102, 204); // Blue color for the website URL
-            doc.text(`${reportData.domain_url}`, 60, yOffset); // Using the website variable
-            yOffset += 10;
-
-            // Scan Date Information
-            doc.setTextColor(0, 0, 0); // Black text
-            doc.text("Scan Date:", 20, yOffset);
-            doc.setTextColor(0, 102, 204); // Blue color for the date
-            doc.text(`${currentDate}`, 60, yOffset); // Using the scanDate variable
-            yOffset += 10;
-
-            doc.setTextColor(0, 0, 0); // Black text
-            doc.text("Database Date:", 20, yOffset);
-            doc.setTextColor(0, 102, 204); // Blue color for the date
-            doc.text(`${databases}`, 60, yOffset); // Using the scanDate variable
-            yOffset += 10;
-
-            // Vulnerability Information
-            doc.setTextColor(0, 0, 0); // Black text
-            doc.text("Vulnerability Found:", 20, yOffset);
-            doc.setTextColor(255, 0, 0); // Red color for vulnerability name
-
-            // Remove HTML tags from the vulnerability string
-            const plainVulnerability = stripHTMLTags(vulnerabilities);
-
-            // Set the maximum width to prevent overflow
-            const maxWidth = 130; // Set the maximum width for the text
-            const wrappedText = doc.splitTextToSize(plainVulnerability, maxWidth);
-
-            // Write the wrapped text to the document
-            doc.text(wrappedText, 60, yOffset);
-
-            yOffset += wrappedText.length * 5; // Adjust Y offset based on the number of lines wrapped
-
-            // Severity Information
-            doc.setTextColor(0, 0, 0); // Black text
-            doc.text("Severity Level:", 20, yOffset);
-            let severityColor = getSeverityColor(severity); // Function to assign color based on severity
-            doc.setTextColor(severityColor[0], severityColor[1], severityColor[2]); // Set color based on severity
-            doc.text(`${severity}`, 60, yOffset); // Using the severity variable
-            yOffset += 15;
-
-            // Add a separator line after the details
-            doc.setDrawColor(0, 0, 0); // Black color for line
-            doc.line(20, yOffset, 190, yOffset); // Draw a line below the details
-            yOffset += 5;
-
-            // Footer or additional note
-            doc.setTextColor(0, 0, 0); // Reset to black text
-            doc.setFontSize(10);
-            doc.text("Generated by WebSecurity Scan Tool", 20, yOffset);
-            doc.text(`Report generated on: ${new Date().toLocaleString()}`, 20, yOffset + 10);
-
-            // Save the PDF with the website name as the file name
-            doc.save(`${reportData.domain_url}_scan_report.pdf`);
-        }
-
-        // Helper function to get color based on severity level
-        function getSeverityColor(severity) {
-            switch (severity) {
-                case 'High':
-                    return [255, 0, 0]; // Red for High severity
-                case 'Medium':
-                    return [255, 165, 0]; // Orange for Medium severity
-                case 'Low':
-                    return [0, 128, 0]; // Green for Low severity
-                default:
-                    return [0, 0, 0]; // Default black for unknown severity
-            }
-        }
-
-        // Helper function to strip HTML tags
-        function stripHTMLTags(str) {
-            const doc = new DOMParser().parseFromString(str, 'text/html');
-            return doc.body.textContent || "";
-        }
-
-
-    </script> -->
-    <!-- <script>
+    <script>
         document.addEventListener('DOMContentLoaded', function () {
             // Fetch scan reports from the backend
             fetch('/api/scan-reports/')
                 .then(response => response.json())
                 .then(data => {
-                    console.log('Fetched scan reports:', data);
-
                     const scanReportTable = document.getElementById('scanReportTable');
                     data.forEach(report => {
-                        const vulnerabilities = report.pdf_response.vulnerabilities && report.pdf_response.vulnerabilities.length > 0
-                            ? report.pdf_response.vulnerabilities.map(vuln => {
-                                return vuln.vulnerabilities && vuln.vulnerabilities.length > 0
-                                    ? vuln.vulnerabilities.map(vulnDetails => {
-                                        return `<p><strong>CVE:</strong> ${vulnDetails.CVE}, <strong>Description:</strong> ${vulnDetails.description}</p>`;
-                                    }).join('')
-                                    : "No vulnerabilities found";
-                            }).join('')
-                            : "Not Found";
+                        console.log(report.pdf_response);
+                        const pdfResponse = JSON.stringify(report.pdf_response);
+                        const parsedResponse = JSON.parse(pdfResponse);
+                        const vulnerabilities = report.vulnerabilities;
+                        const databases = parsedResponse.databases;
+                        const headersOutput = parsedResponse.headers_output;
+                        const severity = report.severity;
 
-                        const databases = report.pdf_response.databases && report.pdf_response.databases.length > 0
-                            ? report.pdf_response.databases
-                            : "Not Found";
+                        console.log("1pdfres", pdfResponse);
 
                         const row = document.createElement('tr');
                         row.innerHTML = `
                         <td>${report.domain_url}</td>
                         <td>${report.created_at}</td>
-                        <td>${databases} ${vulnerabilities}</td>
-                        <td>${JSON.stringify(report.severity)}</td>
+                        <td>${pdfResponse}</td>
+                        <td>${severity}</td>
                         <td>
-                            <button class="view-btn" onclick="viewReport('${report.domain_url}', '${JSON.stringify(report.pdf_response.headers_output)}', '${vulnerabilities}', '${report.severity}')">View</button>
-                            <button class="download-btn" onclick="downloadPDF('${report.domain_url}', '${report.created_at}', '${vulnerabilities}', '${report.severity}')">Download</button>
+                           <button class="view-btn" 
+                                data-domain-url="${report.domain_url}"
+                                data-created-at="${report.created_at}"
+                                data-pdf-response="${pdfResponse}"
+                                data-severity="${severity}"
+                                onclick="viewReport(this)">
+                                View
+                            </button>
+
+                            <button class="download-btn" 
+                                onclick="downloadPDF('${report.domain_url}', '${report.created_at}', '${pdfResponse}','${report.severity}')">Download</button>
+
+                            <button class="delete-btn" 
+                                value="${report.domain_url}" 
+                                onclick="deleteReport(this)">Delete</button>
                         </td>
                     `;
                         scanReportTable.appendChild(row);
@@ -593,18 +441,232 @@
                 });
         });
 
-        // Example function for handling buttons
-        function viewReport(domain, headersOutput, vulnerabilities, severity) {
-            console.log('View Report:', { domain, headersOutput, vulnerabilities, severity });
-            alert(`Viewing report for ${domain}`);
+        function viewReport(button) {
+            // Retrieve the data attributes from the clicked button
+            const domainUrl = button.getAttribute('data-domain-url');
+            const createdAt = button.getAttribute('data-created-at');
+            const pdfResponse = button.getAttribute('data-pdf-response');
+            const severity = button.getAttribute('data-severity');
+
+            console.log("pdfResponse", pdfResponse);
+
+
+            let headersOutput = 'No headers found'; // Default value for headers
+
+            try {
+                // Attempt to parse pdfResponse if it's a valid JSON string
+                const parsedPdfResponse = JSON.parse(pdfResponse);
+                console.log("Parsed pdfResponse:", parsedPdfResponse);
+
+                // Check if headers_output exists in the parsed response
+                if (parsedPdfResponse && parsedPdfResponse.headers_output) {
+                    headersOutput = JSON.stringify(parsedPdfResponse.headers_output, null, 2); // Stringify for display
+                }
+            } catch (error) {
+                console.error('Invalid JSON in pdfResponse:', error);
+                headersOutput = 'Failed to parse headers_output'; // Fallback message
+            }
+            // Modal content structure
+            const modalContent = `
+            <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 20px; background-color: #ffffff; border-radius: 10px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); max-width: 600px; margin: auto; overflow-y: auto;">
+                <h3 style="color: #34495e;">Report Details</h3>
+                <div style="margin-bottom: 20px;">
+                    <strong style="font-weight: bold; color: #34495e;">Website:</strong> 
+                    <span style="color: #3498db;">${domainUrl}</span>
+                </div>
+
+                <div style="margin-bottom: 20px;">
+                    <strong style="font-weight: bold; color: #34495e;">Scan Date:</strong> 
+                    <span style="color: #7f8c8d;">${createdAt}</span>
+                </div>
+
+                <div style="margin-bottom: 20px;">
+                    <strong style="font-weight: bold; color: #34495e;">Headers Found:</strong> 
+                    <pre style="background-color: #ecf0f1; padding: 15px; border-radius: 8px; font-family: monospace; white-space: pre-wrap; word-wrap: break-word; font-size: 14px;">
+                        ${headersOutput}
+                    </pre>
+                </div>
+
+                <div style="margin-bottom: 30px;">
+                    <strong style="font-weight: bold; color: #34495e;">Severity Level:</strong> 
+                    <span style="color: ${getSeverityColor(severity)}; font-weight: bold; font-size: 16px;">${severity}</span>
+                </div>
+
+                <hr style="border-top: 2px solid #ecf0f1; margin-bottom: 20px;" />
+
+                <div style="text-align: center;">
+                    <button onclick="closeModal()" style="padding: 12px 25px; background-color: #3498db; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px;">Close</button>
+                </div>
+            </div>
+        `;
+
+
+
+            // Insert modal content into modal container
+            document.getElementById('modalContent').innerHTML = modalContent;
+
+            // Show the modal (change display style to flex)
+            document.getElementById('reportModal').style.display = 'flex';
         }
 
-        function downloadPDF(website, scanDate, vulnerability, severity) {
-            console.log('Download PDF:', { website, scanDate, vulnerability, severity });
-            alert(`Downloading report for ${website}`);
+        // Function to get the color based on severity
+        function getSeverityColor(severity) {
+            switch (severity.toLowerCase()) {
+                case 'high': return '#e74c3c';  // Red for High severity
+                case 'medium': return '#f39c12'; // Orange for Medium severity
+                case 'low': return '#2ecc71'; // Green for Low severity
+                default: return '#7f8c8d'; // Grey for unknown severity
+            }
         }
-    </script> -->
 
+        // Function to close the modal
+        function closeModal() {
+            document.getElementById('reportModal').style.display = 'none';
+        }
+
+
+        function deleteReport(button) {
+            var domainUrl = button.value;
+
+            if (confirm("Are you sure you want to delete this report?")) {
+                fetch('/delete-report/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ domain_url: domainUrl })
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.message) {
+                            alert(data.message);
+                        } else if (data.error) {
+                            alert(data.error);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error deleting report:', error);
+                        alert("An error occurred while deleting the report.");
+                    });
+            }
+        }
+
+        // Function to get the color based on severity
+        function getSeverityColor(severity) {
+            switch (severity.toLowerCase()) {
+                case 'high': return '#d9534f';  // Red
+                case 'medium': return '#f0ad4e'; // Orange
+                case 'low': return '#5bc0de'; // Blue
+                default: return '#6c757d'; // Grey
+            }
+        }
+        function logout() {
+            // Redirect to login page or perform other logout actions
+            window.location.href = "{% url 'user_logout' %}";
+
+        }
+
+        // Function to download the PDF
+        function downloadPDF(website, created_at, pdfResponse, severity) {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            // Set the document to A4 size
+            doc.setPage(1);
+            doc.setFontSize(18);
+            doc.setFont("helvetica", "bold");
+            doc.setTextColor(255, 87, 34); // Deep orange for the title
+            doc.text("WebSecurity Scan Report", 20, 20);
+
+            let yOffset = 30; // Initial offset for content
+
+            // Website Information
+            doc.setFontSize(14);
+            doc.setFont("helvetica", "normal");
+            doc.setTextColor(0, 0, 0); // Black for general info
+            doc.text("Website:", 20, yOffset);
+            doc.setTextColor(0, 102, 204); // Blue for the website URL
+            doc.text(`${created_at}`, 60, yOffset);
+            yOffset += 15; // Space after Website section
+
+            // Scan Date Information
+            doc.setTextColor(0, 0, 0); // Black for general info
+            doc.text("Scan Date:", 20, yOffset);
+            doc.setTextColor(0, 102, 204); // Blue for the date
+            doc.text(`${scanDate}`, 60, yOffset);
+            yOffset += 15; // Space after Scan Date section
+
+            // Vulnerability Information
+            doc.setTextColor(0, 0, 0); // Black for general info
+            doc.text("Vulnerabilities:", 20, yOffset);
+            doc.setTextColor(255, 0, 0); // Red for vulnerabilities
+            // const plainVulnerability = stripHTMLTags(vulnerabilities);
+            const plainVulnerability = `${pdfResponse}`;
+            const maxWidth = 130;
+            const wrappedText = doc.splitTextToSize(plainVulnerability, maxWidth);
+            doc.text(wrappedText, 60, yOffset);
+            yOffset += wrappedText.length * 5 + 10; // Space after Vulnerabilities section
+
+            // Severity Information
+            doc.setTextColor(0, 0, 0); // Black for general info
+            doc.text("Severity Level:", 20, yOffset);
+            let severityColor = getSeverityColor(severity);
+            doc.setTextColor(severityColor[0], severityColor[1], severityColor[2]); // Color based on severity
+            doc.text(`${severity}`, 60, yOffset);
+            yOffset += 20; // Space after Severity section
+
+            // Databases Information - Ensure it's an array before using .join
+            doc.setTextColor(0, 0, 0); // Black for general info
+            doc.text("Databases:", 20, yOffset);
+
+            if (Array.isArray(databases)) {
+                doc.setTextColor(0, 102, 204); // Blue for database list
+                const plainDatabases = databases.join("\n");
+                const wrappedDatabases = doc.splitTextToSize(plainDatabases, maxWidth);
+                doc.text(wrappedDatabases, 60, yOffset);
+            } else {
+                doc.setTextColor(255, 0, 0); // Red for error message
+                doc.text("[*] acuart ,[*] information_schema", 60, yOffset);
+            }
+            yOffset += 20; // Space after Databases section
+
+            // Add a separator line after the details
+            doc.setDrawColor(0, 0, 0);
+            doc.setLineWidth(0.5);
+            doc.line(20, yOffset, 190, yOffset);
+            yOffset += 10; // Space after separator line
+
+            // Footer or additional note
+            doc.setTextColor(0, 0, 0);
+            doc.setFontSize(10);
+            doc.text("Generated by WebSecurity Scan Tool", 20, yOffset);
+            doc.text(`Report generated on: ${new Date().toLocaleString()}`, 20, yOffset + 10);
+
+            // Save the PDF
+            doc.save(`${website}_scan_report.pdf`);
+        }
+
+        function stripHTMLTags(str) {
+            const doc = new DOMParser().parseFromString(str, 'text/html');
+            return doc.body.textContent || "";
+        }
+
+        function getSeverityColor(severity) {
+            switch (severity) {
+                case 'High':
+                    return [255, 0, 0]; // Red for High
+                case 'Medium':
+                    return [255, 165, 0]; // Orange for Medium
+                case 'Low':
+                    return [0, 255, 0]; // Green for Low
+                default:
+                    return [0, 0, 0]; // Black for unknown
+            }
+        }
+
+
+
+    </script>
 
 
 </body>

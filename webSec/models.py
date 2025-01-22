@@ -26,4 +26,4 @@ class VulnerabilityScanReport(models.Model):
         return json.loads(self.severity)
 
     def __str__(self):
-        return f"Report for {self.username} -{self.domain}- {self.created_at}"
+        return f"Report for {self.username} -{self.severity}-{self.pdf_response}-{self.domain}- {self.created_at}"

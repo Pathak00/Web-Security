@@ -3,11 +3,17 @@ from django.http import HttpResponse
 
 def scan_website_headers(url):
     important_headers = [
-        'Content-Type', 'Content-Length', 'Server', 'Date', 'Cache-Control',
-        'Strict-Transport-Security', 'X-Content-Type-Options', 'X-Frame-Options',
-        'X-XSS-Protection', 'Referrer-Policy', 'Access-Control-Allow-Origin',
-        'Location', 'Accept-Ranges', 'Vary', 'Connection'
-    ]
+    'Server', 'Date', 'Content-Type', 'Transfer-Encoding', 'Connection',
+    'X-Powered-By', 'Content-Encoding', 'Cache-Control', 'Expires', 
+    'Pragma', 'Content-Length', 'Vary', 'Strict-Transport-Security',
+    'X-Content-Type-Options', 'X-Frame-Options', 'X-XSS-Protection',
+    'Referrer-Policy', 'Permissions-Policy', 'Access-Control-Allow-Origin',
+    'Access-Control-Allow-Methods', 'Access-Control-Allow-Headers',
+    'Access-Control-Allow-Credentials', 'Access-Control-Expose-Headers',
+    'Set-Cookie', 'Cookie', 'Location', 'Accept-Ranges', 'Last-Modified',
+    'ETag', 'Content-Disposition', 'Content-Language', 'X-Request-ID'
+]
+
     
   
     headers_dict = {}
@@ -48,15 +54,33 @@ def calculate_severity(headers):
     """
     # Define the headers and their corresponding severity levels
     header_severity = {
-        "Strict-Transport-Security": "High",  # Critical security header (HSTS)
-        "X-Frame-Options": "High",  # Critical security header (Clickjacking protection)
-        "X-XSS-Protection": "High",  # Critical security header (XSS protection)
-        "X-Content-Type-Options": "Medium",  # Medium importance (prevents MIME sniffing)
-        "Referrer-Policy": "Medium",  # Medium importance (controls referrer information)
-        "Cache-Control": "Low",  # Less critical (prevents caching of sensitive data)
-        "Content-Type": "Low",  # Less critical (defines the content type of the response)
-        "Access-Control-Allow-Origin": "Low",  # Less critical (related to CORS)
-    }
+    "Strict-Transport-Security": "High",  # Critical security header (HSTS)
+    "X-Frame-Options": "High",  # Critical security header (Clickjacking protection)
+    "X-XSS-Protection": "High",  # Critical security header (XSS protection)
+    "X-Content-Type-Options": "Medium",  # Medium importance (prevents MIME sniffing)
+    "Referrer-Policy": "Medium",  # Medium importance (controls referrer information)
+    "Cache-Control": "Low",  # Less critical (prevents caching of sensitive data)
+    "Content-Type": "Low",  # Less critical (defines the content type of the response)
+    "Access-Control-Allow-Origin": "Low",  # Less critical (related to CORS)
+    "Content-Encoding": "Medium",  # Medium importance (helps with data compression)
+    "Expires": "Low",  # Less critical (determines content expiration)
+    "Pragma": "Low",  # Less critical (legacy header used for caching)
+    "Permissions-Policy": "High",  # High importance (controls permissions for features like geolocation)
+    "Set-Cookie": "High",  # Critical security header (controls cookies and session management)
+    "Location": "Medium",  # Medium importance (redirect URL for the client)
+    "Transfer-Encoding": "Low",  # Low importance (used for chunked transfer encoding)
+    "Vary": "Low",  # Low importance (used for caching purposes)
+    "X-Powered-By": "Low",  # Less critical (reveals information about server technology)
+    "Content-Length": "Low",  # Less critical (length of the response body)
+    "Accept-Ranges": "Low",  # Low importance (tells client it can request ranges of data)
+    "Last-Modified": "Low",  # Less critical (provides date of last modification)
+    "ETag": "Low",  # Less critical (used for cache validation)
+    "X-Request-ID": "Low",  # Less critical (used for tracking the request)
+    "Server": "Medium",  # Medium importance (reveals server software information)
+    "Connection": "Medium",  # Medium importance (defines connection behavior)
+    "User-Agent": "Low",  # Less critical (identifies the client software)
+    "Allow": "Medium",  # Medium importance (specifies allowed HTTP methods for a resource)
+}
 
     # Initialize a dictionary to track severity counts
     severity_count = {
@@ -70,16 +94,20 @@ def calculate_severity(headers):
         if header not in headers or headers[header] == "Not present":
             severity_count[severity] += 1
 
+    print("low",severity_count["Low"])
+    print("high",severity_count["High"])
+    print("medium",severity_count["Medium"])
     
     # Check for the highest severity count
     if severity_count["High"] > severity_count["Medium"] and severity_count["High"] > severity_count["Low"]:
         return "High"
-    elif severity_count["Medium"] > severity_count["Low"]:
+    elif severity_count["Medium"] > severity_count["Low"] and severity_count["Medium"]>severity_count["High"]:
         return "Medium"
-    elif severity_count["Low"] > severity_count["High"] and severity_count["Low"] > severity_count["Medium"]:
+    elif severity_count["Low"] > severity_count["Medium"] and severity_count["Low"]>severity_count["High"]:
         return "Low"
     else:
         return "No critical issues"
+  
 
 
 def check_website_headers(url):
@@ -98,7 +126,7 @@ def check_website_headers(url):
         
         # Get the response headers
         headers = response.headers
-        
+        print("headers",headers)
         # Calculate the overall severity level based on the headers
         severity = calculate_severity(headers)
         
