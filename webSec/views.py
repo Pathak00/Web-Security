@@ -45,7 +45,7 @@ def land_page(request):
 
             # fetcher = DomainFetcher(domain_url)
             if domain_url:
-                print("inside test url",domain_url)
+           
                 # if fetcher.is_valid_domain(domain_url):
                 #     results = fetcher.crawl_domain()
                 #     result_html = '<br>'.join(results)

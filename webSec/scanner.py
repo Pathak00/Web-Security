@@ -59,19 +59,17 @@ def extract_version(library_name, url):
 
 def get_javascript_libraries(url):
     print("test urlin lir",url)
-    """Extract JavaScript libraries from a given URL and check if they are outdated."""
     libraries = [] 
     outdated_libraries = []
     
     try:
         response = requests.get(url)
+        print("*******scripts*********************")
         response.raise_for_status()
-        print("Response")
-        print(response)
         soup = BeautifulSoup(response.text, 'html.parser')
         scripts = soup.find_all('script')
-        print("scripts")
-        print(scripts)
+       
+      
         for script in scripts:
             src = script.get('src', '')
             if src:
@@ -92,7 +90,7 @@ def get_javascript_libraries(url):
 
 
 def check_vulnerabilities(library_list):
-    """Check for known vulnerabilities of listed libraries."""
+    
     vulnerabilities = []
     
     # Debugging: Print the libraries being checked

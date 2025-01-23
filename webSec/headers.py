@@ -29,14 +29,15 @@ def scan_website_headers(url):
                     headers_dict[header] = response.headers[header]
                 else:
                     headers_dict[header] = 'Not present'
-
         else:
             # If the status code is not 200, add an error message to the dictionary
-            headers_dict["Error"] = f"Failed to retrieve website. Status code: {response.status_code}"
+            headers_dict["Error"] = 'Failed to retrieve website. Server Denied'
 
     except requests.exceptions.RequestException as e:
         # If an exception occurs (e.g., network error), store the error in the dictionary
-        headers_dict["Error"] = f"Error occurred: {e}"
+          headers_dict["headers_output"] ='Error-Max retries reached, server denied. Error:'
+                
+                
 
     # Return the dictionary containing header names and values (or error message)
     return headers_dict
@@ -89,25 +90,28 @@ def calculate_severity(headers):
         "Low": 0
     }
     
-    # Count the severity based on missing headers
-    for header, severity in header_severity.items():
-        if header not in headers or headers[header] == "Not present":
-            severity_count[severity] += 1
+    if "server denied" not in headers:
 
-    print("low",severity_count["Low"])
-    print("high",severity_count["High"])
-    print("medium",severity_count["Medium"])
-    
-    # Check for the highest severity count
-    if severity_count["High"] > severity_count["Medium"] and severity_count["High"] > severity_count["Low"]:
-        return "High"
-    elif severity_count["Medium"] > severity_count["Low"] and severity_count["Medium"]>severity_count["High"]:
-        return "Medium"
-    elif severity_count["Low"] > severity_count["Medium"] and severity_count["Low"]>severity_count["High"]:
-        return "Low"
+        # Count the severity based on missing headers
+        for header, severity in header_severity.items():
+            if header not in headers or headers[header] == "Not present":
+                severity_count[severity] += 1
+
+        print("low",severity_count["Low"])
+        print("high",severity_count["High"])
+        print("medium",severity_count["Medium"])
+
+        # Check for the highest severity count
+        if severity_count["High"] > severity_count["Medium"] and severity_count["High"] > severity_count["Low"]:
+            return "High"
+        elif severity_count["Medium"] > severity_count["Low"] and severity_count["Medium"]>severity_count["High"]:
+            return "Medium"
+        elif severity_count["Low"] > severity_count["Medium"] and severity_count["Low"]>severity_count["High"]:
+            return "Low"
+        else:
+            return "No critical issues"
     else:
-        return "No critical issues"
-  
+        return "Low"
 
 
 def check_website_headers(url):
@@ -133,4 +137,4 @@ def check_website_headers(url):
         return severity
         
     except requests.RequestException as e:
-        return f"Error: {str(e)}"
+        return "Low"
