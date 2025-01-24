@@ -53,6 +53,7 @@ def calculate_severity(headers):
     Returns:
     str: The overall severity level - "High", "Medium", or "Low".
     """
+    print("hedesr",headers);
     # Define the headers and their corresponding severity levels
     header_severity = {
     "Strict-Transport-Security": "High",  # Critical security header (HSTS)
@@ -100,13 +101,23 @@ def calculate_severity(headers):
         print("low",severity_count["Low"])
         print("high",severity_count["High"])
         print("medium",severity_count["Medium"])
-
-        # Check for the highest severity count
-        if severity_count["High"] > severity_count["Medium"] and severity_count["High"] > severity_count["Low"]:
+        high_threshold = 1.8  # Multiplying factor for High severity
+        medium_threshold = 1.2  # Multiplying factor for Medium severity
+    
+        high = severity_count.get("High", 0)
+        medium = severity_count.get("Medium", 0)
+        low = severity_count.get("Low", 0)
+    
+        # Apply the threshold multiplier to medium and high counts
+        adjusted_medium = medium * medium_threshold
+        adjusted_high = high * high_threshold  # Using high threshold multiplier for High severity
+    
+        # Compare adjusted values to determine overall severity
+        if adjusted_high > adjusted_medium and adjusted_high > low:
             return "High"
-        elif severity_count["Medium"] > severity_count["Low"] and severity_count["Medium"]>severity_count["High"]:
+        elif adjusted_medium > adjusted_high and adjusted_medium > low:
             return "Medium"
-        elif severity_count["Low"] > severity_count["Medium"] and severity_count["Low"]>severity_count["High"]:
+        elif low > adjusted_medium and low >= adjusted_high:
             return "Low"
         else:
             return "No critical issues"

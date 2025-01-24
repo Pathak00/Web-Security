@@ -104,17 +104,17 @@ def check_vulnerabilities(library_list):
         if 'jquery' in library:
             library_vulnerabilities.append({
                 'CVE': 'CVE-2020-11022',
-                'description': 'Cross-site scripting (XSS) vulnerability in jQuery before version 3.5.0.'
+                'description': 'Cross-site scripting (XSS) vulnerability in jQuery equal to 1.2 and before 3.5.0.'
             })
         elif 'bootstrap' in library:
             library_vulnerabilities.append({
                 'CVE': 'CVE-2019-8331',
-                'description': 'Security issue related to Bootstrap before version 4.3.1.'
+                'description': 'In Bootstrap before 3.4.1 and 4.3.x before 4.3.1, XSS is possible in the tooltip or popover data-template attribute.'
             })
         elif 'vue' in library:
             library_vulnerabilities.append({
                 'CVE': 'CVE-2011-3385',
-                'description': 'Cross-site scripting (XSS) vulnerability in Vue.js versions before 2.6.12.'
+                'description': 'Cross-site scripting (XSS) vulnerability in WebsiteBaker before 2.8'
             })
         elif 'react' in library:
             library_vulnerabilities.append({
@@ -124,7 +124,7 @@ def check_vulnerabilities(library_list):
         elif 'angular' in library:
             library_vulnerabilities.append({
                 'CVE': 'CVE-2020-7927',
-                'description': 'Security vulnerability in Angular before version 9.1.4.'
+                'description': 'affects MongoDB Ops Manager v4.2 versions prior to and including 4.2.17'
             })
         elif 'lodash' in library:
             library_vulnerabilities.append({
@@ -134,7 +134,7 @@ def check_vulnerabilities(library_list):
         elif 'axios' in library:
             library_vulnerabilities.append({
                 'CVE': 'CVE-2020-28168',
-                'description': 'Potential SSRF vulnerability in Axios versions before 0.21.1.'
+                'description': 'Axios NPM package 0.21.0 contains a Server-Side Request Forgery (SSRF)'
             })
         elif 'moment' in library:
             library_vulnerabilities.append({

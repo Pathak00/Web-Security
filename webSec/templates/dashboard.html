@@ -169,6 +169,15 @@
             border-radius: 3px;
         }
 
+        .solution-btn {
+            background-color: #2946eabe;
+            color: white;
+            padding: 5px 10px;
+            border: none;
+            cursor: pointer;
+            border-radius: 3px;
+        }
+
         .delete-btn {
             background-color: #d61d27;
             color: white;
@@ -413,12 +422,43 @@
 
                         const headersOutput = parsedResponse.headers_output;
                         const Databases = parsedResponse.databases;
+
                         // let databasesContent = '';
+                        let libraryUsed = '';
+                        let vuldetected = '';
+                        let desc = '';
+
+                        const vul = parsedResponse.vulnerabilities;
+
+                        vul.forEach(item => {
+                            item.vulnerabilities.forEach(vulnerability => {
+                                // Update the outside variables, don't redeclare them inside the loop
+                                libraryUsed = JSON.stringify(item.library);
+                                vuldetected = JSON.stringify(vulnerability.CVE);
+                                desc = JSON.stringify(vulnerability.description);
+
+                                console.log("CVE:", vuldetected);
+                                console.log("Description:", desc);
+                                console.log("Library:", libraryUsed);
+                            });
+                        });
+
+                        // Now you can log the updated values of the variables outside the loop as well
 
 
-                        // Databases.forEach(database => {
-                        //     databasesContent += `<strong>Database:</strong> ${database}<br>`;
-                        // });
+                        const safeLibrary = libraryUsed.replace(/[\r\n\t]/g, '')  // Remove line breaks, carriage returns, and tabs
+                            .replace(/'/g, "\\'")     // Escape single quotes
+                            .replace(/"/g, '');       // Remove double quotes
+
+                        const safeCve = vuldetected.replace(/[\r\n\t]/g, '')      // Remove line breaks, carriage returns, and tabs
+                            .replace(/'/g, "\\'")         // Escape single quotes
+                            .replace(/"/g, '');           // Remove double quotes
+
+                        const safeDesc = desc.replace(/[\r\n\t]/g, '')            // Remove line breaks, carriage returns, and tabs
+                            .replace(/'/g, "\\'")               // Escape single quotes
+                            .replace(/"/g, '');                 // Remove double quotes
+
+
                         let headersContent = '';
 
 
@@ -429,7 +469,7 @@
                                 headersContent += `<strong>${key}:</strong> ${headersOutput[key]}<br>`;
                             }
                         }
-
+                        console.log("headerout", headersContent);
                         const row = document.createElement('tr');
                         row.innerHTML = `
     <td>${report.domain_url}</td>
@@ -439,7 +479,7 @@
     </td>
     <td>${report.severity}</td>
     <td>
-        <button class="view-btn" 
+        <button class="view-btn"
             data-domain-url="${report.domain_url}"
             data-created-at="${report.created_at}"
             data-pdf-response="${headersContent}"
@@ -448,11 +488,14 @@
             View
         </button>
 
-        <button class="download-btn" 
-            onclick="downloadPDF('${report.domain_url}', '${report.created_at}', '${headersContent}','${Databases}', '${report.severity}')">Download</button>
-        
-        <button class="delete-btn" 
-            value="${report.domain_url}" 
+        <button class="download-btn"
+            onclick="downloadPDF('${report.domain_url}', '${report.created_at}', '${headersContent}','${Databases}', '${report.severity}','${safeLibrary}','${safeCve}','${safeDesc}')">Download</button>
+          <button class="solution-btn" id="checkHeadersBtn" onclick="analyzeHeaders('${headersContent}')">
+        Solution
+    </button>
+
+        <button class="delete-btn"
+            value="${report.domain_url}"
             onclick="deleteReport(this)">Delete</button>
     </td>
 `;
@@ -479,23 +522,23 @@
     <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 20px; background-color: #ffffff; border-radius: 10px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); max-width: 600px; margin: auto; height: 400px; overflow-y: auto;">
         <h3 style="color: #34495e;">Report Details</h3>
         <div style="margin-bottom: 20px;">
-            <strong style="font-weight: bold; color: #34495e;">Website:</strong> 
+            <strong style="font-weight: bold; color: #34495e;">Website:</strong>
             <span style="color: #3498db;">${domainUrl}</span>
         </div>
 
         <div style="margin-bottom: 20px;">
-            <strong style="font-weight: bold; color: #34495e;">Scan Date:</strong> 
+            <strong style="font-weight: bold; color: #34495e;">Scan Date:</strong>
             <span style="color: #7f8c8d;">${createdAt}</span>
         </div>
 
         <div style="margin-bottom: 20px;">
-            <strong style="font-weight: bold; color: #34495e;">Headers Found:</strong> 
+            <strong style="font-weight: bold; color: #34495e;">Headers Found:</strong>
             <pre style="background-color: #ecf0f1; padding: 15px; border-radius: 8px; font-family: monospace; white-space: pre-wrap; word-wrap: break-word; font-size: 14px;">${pdfResponse}
             </pre>
         </div>
 
         <div style="margin-bottom: 30px;">
-            <strong style="font-weight: bold; color: #34495e;">Severity Level:</strong> 
+            <strong style="font-weight: bold; color: #34495e;">Severity Level:</strong>
             <span style="color: ${getSeverityColor(severity)}; font-weight: bold; font-size: 16px;">${severity}</span>
         </div>
 
@@ -577,78 +620,98 @@
         function stripHTMLTags(str) {
             return str.replace(/<\/?[^>]+(>|$)/g, ""); // This regex removes all HTML tags
         }
-
-        function downloadPDF(website, created_at, pdfResponse, databases, severity) {
+        function downloadPDF(website, created_at, pdfResponse, databases, severity, libraryUsed, vuldetected, desc) {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
 
-            // Strip the HTML tags from pdfResponse to display plain text
+            // Function to strip HTML tags (to avoid adding HTML content to PDF)
             const plainPdfResponse = stripHTMLTags(pdfResponse);
             const cleanDatabases = (databases && databases.trim() && databases !== "No any Databases Found")
                 ? stripHTMLTags(databases)
                 : "No databases detected";
 
+
             // Set the document to A4 size
             doc.setPage(1);
-            doc.setFontSize(18);
+
+            // Title
+            doc.setFontSize(22);
             doc.setFont("helvetica", "bold");
             doc.setTextColor(255, 87, 34); // Deep orange for the title
             doc.text("WebSecurity Scan Report", 20, 20);
-
             let yOffset = 30; // Initial offset for content
 
+            // Helper function to add content and handle page overflow
+            function addContent(text, fontSize, color, lineHeight) {
+                if (yOffset + lineHeight > doc.internal.pageSize.height - 20) {
+                    doc.addPage(); // Add new page if content exceeds the page height
+                    yOffset = 20; // Reset yOffset for the new page
+                }
+                doc.setFontSize(fontSize);
+                doc.setFont("helvetica", "normal");
+                doc.setTextColor(color[0], color[1], color[2]);
+                const wrappedText = doc.splitTextToSize(text, 170); // Wrap text to fit within the page width
+                doc.text(wrappedText, 20, yOffset);
+                yOffset += wrappedText.length * lineHeight + 5; // Adjust the yOffset after printing the content
+            }
+
             // Website Information
-            doc.setFontSize(14);
-            doc.setFont("helvetica", "normal");
-            doc.setTextColor(0, 0, 0); // Black for general info
-            doc.text("Website:", 20, yOffset);
-            doc.setTextColor(0, 102, 204); // Blue for the website URL
-            doc.text(`${website}`, 60, yOffset);
-            yOffset += 20; // Increased space after Website section
+            addContent(`Website: ${website}`, 14, [0, 0, 0], 5);
 
             // Scan Date Information
-            doc.setTextColor(0, 0, 0); // Black for general info
-            doc.text("Scan Date:", 20, yOffset);
-            doc.setTextColor(0, 102, 204); // Blue for the date
-            doc.text(`${created_at}`, 60, yOffset);
-            yOffset += 20; // Increased space after Scan Date section
+            addContent(`Scan Date: ${created_at}`, 14, [0, 0, 0], 5);
 
-            // Vulnerability Information - Display plain text
-            doc.setTextColor(0, 0, 0); // Black for general info
-            doc.text("Vulnerabilities:", 20, yOffset);
-            doc.setTextColor(255, 0, 0); // Red for vulnerabilities
-            const maxWidth = 130;
-            const wrappedText = doc.splitTextToSize(plainPdfResponse, maxWidth);
-            doc.text(wrappedText, 60, yOffset);
-            yOffset += wrappedText.length * 5 + 20; // Space after Vulnerabilities section (increased space)
+            // Scan Report Information (Text wrapping with line breaks handling)
+            addContent("Scan Report:", 14, [0, 0, 0], 5);
+            addContent(plainPdfResponse, 12, [0, 0, 0], 5);
 
-            // Severity Information
-            doc.setTextColor(0, 0, 0); // Black for general info
-            doc.text("Severity Level:", 20, yOffset);
+            // Vulnerabilities Report Section
+            addContent("Vulnerabilities Report:", 14, [255, 0, 0], 5);
+            addContent(libraryUsed ? `Library: ${libraryUsed}` : "Library: Not detected", 12, [0, 0, 0], 5);
+            addContent(vuldetected ? `CVE: ${vuldetected}` : "CVE: Not detected", 12, [0, 0, 0], 5);
+            addContent(desc ? `Description: ${desc}` : "Description: Not detected", 12, [0, 0, 0], 5);
+
+            // Severity Level Section
+            addContent("Severity Level:", 14, [0, 0, 0], 5);
             let severityColor = getSeverityColor(severity);
-            doc.setTextColor(severityColor[0], severityColor[1], severityColor[2]); // Color based on severity
-            doc.text(`${severity}`, 60, yOffset);
-            yOffset += 20; // Space after Severity section
+            addContent(severity, 12, severityColor, 5);
 
-            // Databases Information - Ensure it's an array before using .join
-            doc.setTextColor(0, 0, 0); // Black for general info
-            doc.text("Databases:", 20, yOffset);
-            doc.text(`${cleanDatabases}`, 60, yOffset);
-            yOffset += 20; // Space after Databases section
+            // Databases Section
+            addContent("Databases:", 14, [0, 0, 0], 5);
+            addContent(cleanDatabases, 12, [0, 0, 0], 5);
 
-            // Add a separator line after the details
+            // Add a separator line
+            if (yOffset + 15 > doc.internal.pageSize.height - 20) {
+                doc.addPage(); // Add a new page if needed
+                yOffset = 20; // Reset the yOffset
+            }
             doc.setDrawColor(0, 0, 0);
             doc.setLineWidth(0.5);
             doc.line(20, yOffset, 190, yOffset);
-            yOffset += 10; // Space after separator line
+            yOffset += 15; // Space after separator line
 
-            // Footer or additional note
-            doc.setTextColor(0, 0, 0);
-            doc.setFontSize(10);
-            doc.text("Generated by WebSecurity Scan Tool", 20, yOffset);
-            doc.text(`Report generated on: ${new Date().toLocaleString()}`, 20, yOffset + 10);
+            // Footer with additional information (static on every page)
+            const footerHeight = 20; // The height of the footer (approximately 20 units)
+            const footerText = "Generated by WebSecurity Scan Tool | Report generated on: " + new Date().toLocaleString();
 
-            // Save the PDF
+            const addFooter = () => {
+                // Place footer at the bottom of the current page
+                doc.setFontSize(10);
+                doc.setTextColor(0, 0, 0); // Black color for footer text
+                doc.text(footerText, 20, doc.internal.pageSize.height - footerHeight);
+            };
+
+            // Add footer to the first page
+            addFooter();
+
+            // Check if we need to add more pages
+            while (yOffset > doc.internal.pageSize.height - footerHeight) {
+                doc.addPage(); // Add a new page if we exceed the page height
+                yOffset = 20; // Reset yOffset for the new page
+                addFooter(); // Add footer to the new page
+            }
+
+            // Save the PDF after all content and footer are added
             doc.save(`${website}_scan_report.pdf`);
         }
 
@@ -673,6 +736,71 @@
         }
 
 
+
+        function analyzeHeaders(headerData) {
+            const solutions = evaluateHeaders(headerData);
+            alert(solutions.join("\n"));
+        }
+
+        // Function to evaluate headers and provide solutions
+        function evaluateHeaders(headerData) {
+            const solutions = [];
+
+            if (headerData.toLowerCase().includes("error-max retries reached, server denied")) {
+                solutions.push("No information could be collected.Server Denied");
+                return solutions;  // Stop further processing if this error is found
+            }
+
+            const headers = parseHeaders(headerData);
+
+            const criticalHeaders = [
+                "Strict-Transport-Security",
+                "X-Content-Type-Options",
+                "X-Frame-Options",
+                "X-XSS-Protection",
+                "Cache-Control",
+                "Access-Control-Allow-Origin",
+                "Set-Cookie",
+                "Content-Length"
+            ];
+
+            criticalHeaders.forEach(header => {
+                if (!headers[header] || headers[header] === "Not present") {
+                    solutions.push(`Warning: ${header} header is missing. Consider adding it for better security.`);
+                }
+            });
+
+            // Specific checks for individual headers if they are present but misconfigured
+            if (headers["Strict-Transport-Security"] && !headers["Strict-Transport-Security"].includes("max-age")) {
+                solutions.push("Warning: Strict-Transport-Security header is misconfigured. Ensure it's set with 'max-age' for HTTPS enforcement.");
+            }
+
+            if (headers["Cache-Control"] && !headers["Cache-Control"].includes("no-store")) {
+                solutions.push("Warning: Cache-Control is misconfigured. Add 'no-store' to prevent sensitive data caching.");
+            }
+
+            if (headers["Set-Cookie"] && !headers["Set-Cookie"].includes("Secure")) {
+                solutions.push("Warning: Cookies are not marked as Secure. Consider setting the Secure flag for better security.");
+            }
+
+            // Additional checks for other headers
+            if (solutions.length === 0) {
+                solutions.push("No major issues detected with the headers.");
+            }
+
+            return solutions;
+        }
+
+
+        function parseHeaders(headerData) {
+            const headers = {};
+            const regex = /<strong>([^:]+):<\/strong>\s*([^<]+)<br>/g;
+            let match;
+            while ((match = regex.exec(headerData)) !== null) {
+                headers[match[1].trim()] = match[2].trim();
+            }
+            return headers;
+        }
 
     </script>
 

@@ -75,9 +75,7 @@ def land_page(request):
 
                 # Run SQLMap on the domain
                 sqlmap_output, sqlmap_error, databases = run_sqlmap(domain_url, parameters={'dbs': None, 'threads': '4'})
-                print("sqlmap_error",sqlmap_error)
-                print("sqlmap_output",sqlmap_output)
-                print("databases",databases)
+               
                 # Add SQLMap output and database names to result_html
                 result_html += f"<br><h3>SQLMap Results:</h3><pre>{sqlmap_output}</pre>"
                 if sqlmap_error:
@@ -94,11 +92,10 @@ def land_page(request):
                 headers_output = scan_website_headers(domain_url)
                 
                 severity=check_website_headers(domain_url)
-                print("headers_output",headers_output)
-                print("vulnerabilities",vulnerabilities)
-                print("result_html",result_html)
+               
+           
                 pdf_response = generate_pdf(headers_output, vulnerabilities, result_html,severity)
-                print("PDFRERSPOMSE",pdf_response)
+         
                 if request.user.is_authenticated:
                 # If the user is authenticated, return the PDF inline
                     # response = HttpResponse(pdf_response, content_type='application/pdf')
