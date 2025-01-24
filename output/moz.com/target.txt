@@ -1,0 +1,1 @@
+https://moz.com/domain-analysis/policies.google.com (GET)  # C:\Users\rupak\OneDrive\Desktop\crypto\sqlmap-master\sqlmap.py -u https://moz.com/domain-analysis/policies.google.com --batch --output-dir=output --random-agent --level=1 --risk=1 --thread=3 --dbs --threads 4

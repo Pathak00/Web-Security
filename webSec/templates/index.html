@@ -176,6 +176,30 @@
             background-color: #2E236C;
             /* Medium navy color for hover */
         }
+
+        /* CSS Spinner */
+        .loading-spinner {
+            border: 4px solid #f3f3f3;
+            /* Light gray color */
+            border-top: 4px solid #3498db;
+            /* Blue color */
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 2s linear infinite;
+            margin: 20px auto;
+            opacity: 10%;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
     </style>
 </head>
 
@@ -218,13 +242,18 @@
     <div class="search-container">
         <div class="search-box">
             <h2>Enter Your Domain</h2>
-            <form method="POST" action="">
+            <form method="POST" action="" onsubmit="showLoading();">
                 {% csrf_token %}
                 <input type="text" name="name" placeholder="Scan Vulnerabilities...">
                 <button type="submit">Search</button>
             </form>
         </div>
+        <!-- Loading Spinner -->
+        <div id="loading-spinner" style="display: none;">
+            <img src="static/images/loading.gif" alt="Loading..." />
+        </div>
     </div>
+
 
 
 
@@ -265,15 +294,6 @@
 
 
 
-
-
-    <div id="loading-spinner" class="spinner"></div>
-
-    <div id="result-container"></div>
-
-
-
-
     <script>
         document.getElementById('crawler-form').addEventListener('submit', function (event) {
             event.preventDefault(); // Prevent default form submission
@@ -284,6 +304,15 @@
                 generateReport(domain);
             }
         });
+
+        function showLoading() {
+            // Show the loading spinner
+            document.getElementById('loading-spinner').style.display = 'block';
+            document.getElementById('loading-spinner').style.opacity = '40%';
+
+            // Optionally, you can hide the search form while loading
+            document.querySelector('.search-box').style.display = 'none';
+        }
 
 
         function generateReport(domain) {

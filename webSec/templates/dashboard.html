@@ -345,7 +345,7 @@
 
 
     <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark">
+    <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
         <div class="container">
             <a class="navbar-brand" href="/">WebSecurity
                 <div class="motto">Scan Vulnerabilities, Stay Safe</div>
@@ -355,6 +355,7 @@
             <i class="fas fa-sign-out-alt"></i> Logout
         </button>
     </nav>
+
 
     <main>
         <!-- Vulnerability Scan Report Table -->
@@ -746,7 +747,7 @@
         function evaluateHeaders(headerData) {
             const solutions = [];
 
-            if (headerData.toLowerCase().includes("error-max retries reached, server denied")) {
+            if (headerData.toLowerCase().includes("server denied")) {
                 solutions.push("No information could be collected.Server Denied");
                 return solutions;  // Stop further processing if this error is found
             }
