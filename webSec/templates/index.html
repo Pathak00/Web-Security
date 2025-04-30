@@ -36,14 +36,14 @@
         }
 
         body {
-            background-color: #9290C3;
+            background-color: #1F1A3D;
             /* Lavender blue background */
             margin: 0;
             padding: 0;
         }
 
         .navbar {
-            background-color: #535C91;
+            background-color: #17153B;
             /* Steel blue color to match body */
             padding: 1rem 0;
             /* Increased vertical padding */
@@ -92,7 +92,7 @@
             padding: 20px;
             border-radius: 8px;
             box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
-            background: #fff;
+            background-color: #fff;
             text-align: center;
         }
 
@@ -109,7 +109,7 @@
             padding: 15px;
             border: none;
             border-radius: 25px;
-            background: #535C91;
+            background: #191477;
             /* Steel blue color */
             color: #fff;
             font-size: 18px;
@@ -183,33 +183,50 @@
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark">
         <div class="container">
-            <a class="navbar-brand" href="#">WebSecurity
+            <a class="navbar-brand">WebSecurity
                 <div class="motto">Scan Vulnerabilities, Stay Safe</div>
             </a>
+            <!-- Navbar with Sign Up link -->
             <div class="collapse navbar-collapse">
                 <ul class="navbar-nav ml-auto">
+                    <!-- Login link that triggers Login Modal -->
                     <li class="nav-item">
-                        <a class="nav-link" href="#" data-toggle="modal" data-target="#loginModal">Login</a>
+                        <a class="nav-link" href="login">Login</a>
                     </li>
+
+                    <!-- Sign Up link that triggers Sign Up Modal -->
                     <li class="nav-item">
-                        <a class="nav-link" href="#" data-toggle="modal" data-target="#signupModal">Sign Up</a>
+                        <a class="nav-link" href="register">Sign Up</a>
                     </li>
                 </ul>
             </div>
+
         </div>
     </nav>
+
+    <div id="downloadSection" style="display: none; text-align: center;">
+        <button class="download-btn" onclick="downloadPDF()">Download Scan Report</button>
+    </div>
+
+
+    {% if pdf_url %}
+    <h2>Generated PDF Report</h2>
+    <button onclick="window.open('{{ pdf_url }}', '_blank')">Open PDF in New Window</button>
+    {% endif %}
 
     <!-- Search Box -->
     <div class="search-container">
         <div class="search-box">
-            <h2>Enter Your Domaain</h2>
-            <form method="post">
+            <h2>Enter Your Domain</h2>
+            <form method="POST" action="">
                 {% csrf_token %}
                 <input type="text" name="name" placeholder="Scan Vulnerabilities...">
                 <button type="submit">Search</button>
             </form>
         </div>
     </div>
+
+
 
     <!-- Login Modal -->
     <div class="modal fade" id="loginModal" tabindex="-1" role="dialog" aria-labelledby="loginModalLabel"
@@ -223,63 +240,97 @@
                     </button>
                 </div>
                 <div class="modal-body">
-                    <form>
+                    <form method="POST" action="{% url 'dashboard' %}">
+                        {% csrf_token %}
                         <div class="form-group">
                             <label for="loginUsername">Username</label>
-                            <input type="text" class="form-control" id="loginUsername" placeholder="Enter username"
-                                required>
+                            <input type="text" class="form-control" id="loginUsername" name="loginUsername"
+                                placeholder="Enter username" required>
                         </div>
                         <div class="form-group">
                             <label for="loginPassword">Password</label>
-                            <input type="password" class="form-control" id="loginPassword" placeholder="Password"
-                                required>
+                            <input type="password" class="form-control" id="loginPassword" name="loginPassword"
+                                placeholder="Password" required>
                         </div>
                         <button type="submit" class="btn btn-primary btn-block">Login</button>
+                        {% if error %}
+                        <p class="text-danger">{{error}}</p>
+                        {%endif%}
                     </form>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Sign Up Modal -->
-    <div class="modal fade" id="signupModal" tabindex="-1" role="dialog" aria-labelledby="signupModalLabel"
-        aria-hidden="true">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="signupModalLabel">Sign Up</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <form>
-                        <div class="form-group">
-                            <label for="signupUsername">Username</label>
-                            <input type="text" class="form-control" id="signupUsername" placeholder="Enter username"
-                                required>
-                        </div>
-                        <div class="form-group">
-                            <label for="signupEmail">Email address</label>
-                            <input type="email" class="form-control" id="signupEmail" placeholder="Enter email"
-                                required>
-                        </div>
-                        <div class="form-group">
-                            <label for="signupPassword">Password</label>
-                            <input type="password" class="form-control" id="signupPassword" placeholder="Password"
-                                required>
-                        </div>
-                        <button type="submit" class="btn btn-primary btn-block">Sign Up</button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
+
+
+
+
+
     <div id="loading-spinner" class="spinner"></div>
 
     <div id="result-container"></div>
 
+
+
+
     <script>
+        document.getElementById('crawler-form').addEventListener('submit', function (event) {
+            event.preventDefault(); // Prevent default form submission
+
+
+            const domain = document.getElementById('domainInput').value.trim();
+            if (domain) {
+                generateReport(domain);
+            }
+        });
+
+
+        function generateReport(domain) {
+            if (!scanResults[domain]) {
+                alert('No scan results found for this domain.');
+                return;
+            }
+
+            // Check if the user is logged in
+            if (!isLoggedIn) {
+                alert('You must be logged in to download the report.');
+                return;
+            }
+
+            const result = scanResults[domain];
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            doc.setFontSize(18);
+            doc.text("Vulnerability Scan Report", 20, 20);
+            doc.setFontSize(12);
+            doc.text(`Website: ${domain}`, 20, 30);
+            doc.text(`Scan Date: ${result.scanDate}`, 20, 40);
+            doc.text(`Severity: ${result.severity}`, 20, 50);
+            doc.text(`Vulnerabilities Found:`, 20, 60);
+
+            let yOffset = 70;
+            result.vulnerabilities.forEach((vulnerability, index) => {
+                doc.text(`${index + 1}. ${vulnerability}`, 20, yOffset);
+                yOffset += 10;
+            });
+
+            // Show the download button
+            document.getElementById('downloadSection').style.display = 'block';
+
+            // Store the generated report in a variable (for download later)
+            window.generatedPDF = doc;
+        }
+
+
+
+        function downloadPDF() {
+            if (window.generatedPDF) {
+                window.generatedPDF.save('scan_report.pdf');
+            }
+        }
+
         document.getElementById('crawler-form').addEventListener('submit', function (event) {
             event.preventDefault(); // Prevent default form submission
 
@@ -309,6 +360,10 @@
             // Show the spinner and send the request
             document.getElementById('loading-spinner').classList.add('loading');
             xhr.send(formData);
+
+
+
+
         });
     </script>
 
@@ -316,6 +371,14 @@
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <script>
+        window.onload = function () {
+            const errorMessage = "{{ error|escapejs }}";  // Safely escape the error message
+            if (errorMessage) {
+                alert("Invalid login");  // Show alert with the error message
+            }
+        };</script>
 </body>
 
 </html>

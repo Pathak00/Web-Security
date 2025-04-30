@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        /* Basic page styling */
+        body,
+        html {
+            height: 100%;
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #1F1A3D;
+            /* Dark background color */
+        }
+
+        /* Navbar styling */
+        nav.navbar {
+            background-color: #17153B;
+            padding: 1rem;
+        }
+
+        .navbar-brand {
+            color: #C8ACD6;
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .navbar-brand .motto {
+            font-size: 0.9rem;
+            font-weight: 400;
+            color: #aaa;
+        }
+
+        .navbar-nav .nav-link {
+            color: #C8ACD6;
+            font-size: 1.1rem;
+        }
+
+        .navbar-nav .nav-link:hover {
+            color: #433D8B;
+        }
+
+        /* Modal content styling */
+        .modal-content {
+            background: #17153B;
+            border-radius: 8px;
+            border: 1px solid #433D8B;
+            overflow: hidden;
+        }
+
+        /* Modal header styling */
+        .modal-header {
+            background: #2E236C;
+            color: #C8ACD6;
+            padding: 1rem;
+            border-bottom: none;
+            text-align: center;
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        /* Modal body styling */
+        .modal-body {
+            padding: 2rem;
+            background: #17153B;
+            color: #C8ACD6;
+        }
+
+        /* Form controls styling */
+        .modal-body .form-control {
+            background: #2E236C;
+            color: #C8ACD6;
+            border: 1px solid #433D8B;
+            padding: 0.75rem;
+            margin-bottom: 1.5rem;
+            border-radius: 4px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .modal-body .form-control:hover {
+            border-color: #2E236C;
+            box-shadow: 0 0 8px rgba(66, 58, 139, 0.7);
+        }
+
+        .modal-body .form-control:focus {
+            outline: none;
+            border-color: #C8ACD6;
+            box-shadow: 0 0 5px rgba(200, 172, 214, 0.7);
+        }
+
+        /* Form group styling */
+        .form-group {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            margin-bottom: 1.75rem;
+        }
+
+        .form-group label {
+            color: #C8ACD6;
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-right: 20px;
+            width: 40%;
+            text-align: right;
+        }
+
+        /* Input fields styling */
+        .form-group .form-control {
+            width: 60%;
+        }
+
+        /* Submit button styling */
+        .btn-primary {
+            background-color: #433D8B;
+            border-color: #433D8B;
+            padding: 0.75rem;
+            width: 100%;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            background-color: #2E236C;
+            border-color: #2E236C;
+            box-shadow: 0 0 8px rgba(66, 58, 139, 0.7);
+        }
+
+        /* Error message styling */
+        .alert-danger {
+            background-color: #2E236C;
+            color: #fff;
+            padding: 1rem;
+            margin-top: 1.5rem;
+            border-radius: 5px;
+        }
+
+        /* Centering modal content */
+        .form-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 80vh;
+            margin-top: 20px;
+            /* Adjust height for centering */
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 576px) {
+            .modal-dialog {
+                width: 90%;
+            }
+
+            .form-group label {
+                width: 30%;
+            }
+
+            .form-group .form-control {
+                width: 70%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">WebSecurity
+                <div class="motto">Scan Vulnerabilities, Stay Safe</div>
+            </a>
+
+        </div>
+    </nav>
+
+
+    <!-- Flash messages (e.g. success or error messages) -->
+    {% if messages %}
+    <div class="container">
+        {% for message in messages %}
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Form container -->
+    <div class="form-container">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="loginModalLabel">Login</h5>
+                </div>
+                <div class="modal-body">
+                    <form method="POST" action="{% url 'dashboard' %}">
+                        {% csrf_token %}
+
+                        <!-- Username -->
+                        <div class="form-group">
+                            <label for="username" class="text-light">{{ form.username.label }}</label>
+                            {{ form.username }}
+                        </div>
+
+                        <!-- Password -->
+                        <div class="form-group">
+                            <label for="password" class="text-light">{{ form.password.label }}</label>
+                            {{ form.password }}
+                        </div>
+
+                        <!-- Submit Button -->
+                        <button type="submit" class="btn btn-primary btn-block">Login</button>
+                    </form>
+                </div>
+
+                <span style="color: white; padding: 3px; text-align: center;">Don't have an Account? <a
+                        href="{% url 'register' %}" style="font-size: 14px;">Create Account</a>
+                </span>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Include Bootstrap JS and jQuery for proper functionality -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+</body>
+
+</html>

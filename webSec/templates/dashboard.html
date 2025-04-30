@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Font Awesome for icons -->
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+
+        /* Navbar styles */
+        nav {
+            background: #1F1A3D;
+            color: white;
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* nav .user-info {
+            display: flex;
+            align-items: center;
+        }
+
+        nav .user-info img {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+
+        nav .user-info span {
+            margin-right: 10px;
+        } */
+
+        nav.navbar {
+            background-color: #17153B;
+            padding: 2rem;
+
+        }
+
+        .navbar-brand {
+            color: #ffffff;
+            font-size: 1rem;
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        .navbar-brand .motto {
+            font-size: 0.9rem;
+            font-weight: 400;
+            color: #aaa;
+        }
+
+        .navbar-nav .nav-link {
+            color: #C8ACD6;
+            font-size: 1.1rem;
+        }
+
+        .navbar-nav .nav-link:hover {
+            color: #433D8B;
+        }
+
+        nav .logout-btn {
+            background: transparent;
+            border: none;
+            color: white;
+            font-size: 18px;
+            cursor: pointer;
+        }
+
+        nav .logout-btn i {
+            font-size: 20px;
+        }
+
+        /* Main content area */
+        .main-content {
+            margin: 20px;
+            background: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        footer {
+            text-align: center;
+            padding: 10px;
+            background: #1F1A3D;
+            color: white;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        table th,
+        table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        table th {
+            background-color: #1F1A3D;
+            color: white;
+        }
+
+        table tr:hover {
+            background-color: #f5f5f5;
+        }
+
+        .severity-high {
+            color: red;
+            font-weight: bold;
+        }
+
+        .severity-medium {
+            color: orange;
+            font-weight: bold;
+        }
+
+        .severity-low {
+            color: green;
+            font-weight: bold;
+        }
+
+        .download-section {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .download-section button {
+            background-color: #007BFF;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        .download-section button:hover {
+            background-color: #0056b3;
+        }
+
+        /* View Button Styles */
+        .view-btn,
+        .download-btn {
+            background-color: #28a745;
+            color: white;
+            padding: 5px 10px;
+            border: none;
+            cursor: pointer;
+            border-radius: 3px;
+        }
+
+        .view-btn:hover,
+        .download-btn:hover {
+            background-color: #218838;
+        }
+
+        /* Modal Styles (for view details) */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            width: 60%;
+            max-width: 500px;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-close {
+            cursor: pointer;
+            font-size: 20px;
+            color: #535C91;
+        }
+
+        .modal-body {
+            margin-top: 10px;
+        }
+
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+
+        .scrollable-tbody {
+            display: block;
+            max-height: 300px;
+            /* Set the height of the tbody */
+            overflow-y: auto;
+            width: 100%;
+        }
+
+        thead,
+        tbody tr {
+            display: table;
+            width: 100%;
+            table-layout: fixed;
+        }
+
+        thead {
+            background-color: #f1f1f1;
+        }
+    </style>
+</head>
+
+<body>
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-dark">
+    <div class="container">
+        <!-- Check if the user is logged in -->
+        {% if user.is_authenticated %}
+            <!-- Redirect to a new page (e.g., 'dashboard' or 'profile') if logged in -->
+            <a class="navbar-brand" href="{% url 'dashboard' %}">WebSecurity
+                <div class="motto">Scan Vulnerabilities, Stay Safe</div>
+            </a>
+        {% else %}
+            <!-- Default link to the homepage if not logged in -->
+            <a class="navbar-brand" href="/">WebSecurity
+                <div class="motto">Scan Vulnerabilities, Stay Safe</div>
+            </a>
+        {% endif %}
+    </div>    
+    </div>
+    {% if user.is_authenticated %}
+        <!-- Show logout button if the user is logged in -->
+        <form method="POST" action="{% url 'user_logout' %}">
+            {% csrf_token %}
+            <button type="submit" class="logout-btn">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </button>
+        </form>
+    {% endif %}
+</nav>
+
+
+
+    <main>
+        <!-- Vulnerability Scan Report Table -->
+        <section class="main-content">
+            <h2> <span id="userName" style="text-align: center;">User</span></h2>
+            <h2>Vulnerability Scan Reports</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Website</th>
+                        <th>Scan Date</th>
+                        <th>Vulnerability Found</th>
+                        <th>Severity</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="scanReportTable">
+                    <!-- Rows will be dynamically populated with JavaScript -->
+                </tbody>
+            </table>
+        </section>
+    </main>
+
+    <!-- Modal for Viewing Report Details -->
+    <div id="reportModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Scan Report Details</h3>
+                <span class="modal-close" onclick="closeModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <p id="modalContent"></p>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2024 WebSecurity. All rights reserved.</p>
+    </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script> <!-- jsPDF library -->
+    <!-- <script>
+        // Example user data (in practice, this would come from a backend)
+        const reportData = JSON.parse('{{ pdf_response|escapejs }}');
+        const severityValue = JSON.parse('{{ severity|escapejs }}');
+
+
+        // Example scan report data (in practice, this would come from a backend)
+        const scanReports = [
+            {
+                website: "example.com",
+                scanDate: "October 30, 2024",
+                vulnerability: "SQL Injection",
+                severity: "High"
+            }
+        ];
+
+        // Populate user data on page load
+        var username = "{{ username }}";
+        var severity = "{{ severity }}";
+        console.log(severity)
+        console.log("hello");
+
+        document.getElementById('userName').innerText = username;
+        //document.getElementById('profilePic').src = userData.profilePic;
+        console.log("testreportData");
+        console.log(reportData);
+        // Populate scan report table dynamically
+        const vulnerabilities = reportData.vulnerabilities && reportData.vulnerabilities.length > 0
+            ? reportData.vulnerabilities.map(vuln => {
+                return vuln.vulnerabilities && vuln.vulnerabilities.length > 0
+                    ? vuln.vulnerabilities.map(vulnDetails => {
+                        return `<p><strong>CVE:</strong> ${vulnDetails.CVE}, <strong>Description:</strong> ${vulnDetails.description}</p>`;
+                    }).join('')
+                    : "No vulnerabilities found";
+            }).join('')
+            : "Not Found";
+
+
+        const databases = reportData.databases && reportData.databases.length > 0 ? reportData.databases : "Not Found";
+        //const vulnerabilities = reportData.vulnerabilities && reportData.vulnerabilities.length > 0 ? reportData.vulnerabilities : "Not Found";
+
+
+        const headersOutput = JSON.stringify(reportData.headers_output, null, 2);
+        console.log(headersOutput);
+        const currentDate = new Date().toLocaleDateString()
+
+        const scanReportTable = document.getElementById('scanReportTable');
+        scanReports.forEach(report => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${reportData.domain_url}</td>
+                <td>${currentDate}</td>
+                <td>${databases} ${vulnerabilities}</td>
+                <td>${severity}</td>
+                <td>
+                    <button class="view-btn" onclick="viewReport('${report.domain_url}', '${report.headersOutput}', '${report.vulnerabilities}', '${report.severity}')">View</button>
+                    <button class="download-btn" onclick="downloadPDF('${report.website}', '${report.scanDate}', '${report.vulnerability}', '${report.severity}')">Download</button>
+                </td>
+            `;
+            scanReportTable.appendChild(row);
+        });
+
+        // Function to assign a class based on severity level
+        function getSeverityClass(severity) {
+            switch (severity) {
+                case 'High':
+                    return 'severity-high';
+                case 'Medium':
+                    return 'severity-medium';
+                case 'Low':
+                    return 'severity-low';
+                default:
+                    return '';
+            }
+        }
+
+        // View report in a modal
+        function viewReport(website, scanDate, vulnerability, severity) {
+            // Log the website URL for debugging purposes
+            console.log(website);
+
+            // Format the modal content with better structure, colors, and horizontal lines
+            const modalContent = `
+        <div style="font-family: Arial, sans-serif; padding: 20px; background-color: #f9f9f9; border-radius: 8px; width: 400px;">
+            <h2 style="color: #333; font-size: 1.8em; margin-bottom: 10px; text-align: center;">Scan Report</h2>
+            
+            <hr style="border-top: 1px solid #ccc; margin-bottom: 15px;" />
+
+            <div style="margin-bottom: 10px;">
+                <strong style="font-weight: bold; color: #555;">Website:</strong> 
+                <span style="color: #007bff;">${reportData.domain_url}</span>
+            </div>
+
+            <div style="margin-bottom: 10px;">
+                <strong style="font-weight: bold; color: #555;">Scan Date:</strong> 
+                <span style="color: #333;">${currentDate}</span>
+            </div>
+
+            <hr style="border-top: 1px solid #ccc; margin-bottom: 15px;" />
+
+            <div style="margin-bottom: 10px;">
+                <strong style="font-weight: bold; color: #555;">Vulnerability Found:</strong> 
+                <span style="color: #d9534f; font-weight: bold;">${vulnerabilities}</span>
+            </div>
+    
+            <div style="margin-bottom: 10px;">
+                <strong style="font-weight: bold; color: #555;">Database Found:</strong> 
+                <span style="color: #d9534f; font-weight: bold;">${databases}</span>
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <strong style="font-weight: bold; color: #555;">Severity Level:</strong> 
+                <span style="color: ${getSeverityColor(severity)}; font-weight: bold;">${severity}</span>
+            </div>
+            
+            <hr style="border-top: 1px solid #ccc; margin-top: 15px;" />
+
+            <div style="text-align: center; margin-top: 20px;">
+                <button onclick="closeModal()" style="padding: 10px 20px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer;">Close</button>
+            </div>
+        </div>
+    `;
+
+            // Insert the modal content into the modal container
+            document.getElementById('modalContent').innerHTML = modalContent;
+
+            // Show the modal
+            document.getElementById('reportModal').style.display = 'flex';
+        }
+
+        // Helper function to get color based on severity level
+        function getSeverityColor(severity) {
+            switch (severity) {
+                case 'High':
+                    return '#d9534f'; // Red for High severity
+                case 'Medium':
+                    return '#f0ad4e'; // Orange for Medium severity
+                case 'Low':
+                    return '#5bc0de'; // Blue for Low severity
+                default:
+                    return '#555'; // Default color for no severity
+            }
+        }
+
+        // Function to close the modal
+        function closeModal() {
+            document.getElementById('reportModal').style.display = 'none';
+        }
+
+        // Logout function
+        function logout() {
+            // Redirect to login page or perform other logout actions
+            window.location.href = "{% url 'user_logout' %}";
+
+        }
+
+        // Function to download PDF report
+        function downloadPDF(website, scanDate, vulnerability, severity) {
+            // Initialize jsPDF
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            // Set the document to A4 size
+            doc.setPage(1);
+            doc.setFontSize(18);
+            doc.setFont("helvetica", "bold");
+            doc.text("WebSecurity Scan Report", 20, 20);
+
+            let yOffset = 30;
+
+            // Website Information
+            doc.setFontSize(12);
+            doc.setFont("helvetica", "normal");
+            doc.setTextColor(0, 0, 0); // Black text for general info
+            doc.text("Website:", 20, yOffset);
+            doc.setTextColor(0, 102, 204); // Blue color for the website URL
+            doc.text(`${reportData.domain_url}`, 60, yOffset); // Using the website variable
+            yOffset += 10;
+
+            // Scan Date Information
+            doc.setTextColor(0, 0, 0); // Black text
+            doc.text("Scan Date:", 20, yOffset);
+            doc.setTextColor(0, 102, 204); // Blue color for the date
+            doc.text(`${currentDate}`, 60, yOffset); // Using the scanDate variable
+            yOffset += 10;
+
+            doc.setTextColor(0, 0, 0); // Black text
+            doc.text("Database Date:", 20, yOffset);
+            doc.setTextColor(0, 102, 204); // Blue color for the date
+            doc.text(`${databases}`, 60, yOffset); // Using the scanDate variable
+            yOffset += 10;
+
+            // Vulnerability Information
+            doc.setTextColor(0, 0, 0); // Black text
+            doc.text("Vulnerability Found:", 20, yOffset);
+            doc.setTextColor(255, 0, 0); // Red color for vulnerability name
+
+            // Remove HTML tags from the vulnerability string
+            const plainVulnerability = stripHTMLTags(vulnerabilities);
+
+            // Set the maximum width to prevent overflow
+            const maxWidth = 130; // Set the maximum width for the text
+            const wrappedText = doc.splitTextToSize(plainVulnerability, maxWidth);
+
+            // Write the wrapped text to the document
+            doc.text(wrappedText, 60, yOffset);
+
+            yOffset += wrappedText.length * 5; // Adjust Y offset based on the number of lines wrapped
+
+            // Severity Information
+            doc.setTextColor(0, 0, 0); // Black text
+            doc.text("Severity Level:", 20, yOffset);
+            let severityColor = getSeverityColor(severity); // Function to assign color based on severity
+            doc.setTextColor(severityColor[0], severityColor[1], severityColor[2]); // Set color based on severity
+            doc.text(`${severity}`, 60, yOffset); // Using the severity variable
+            yOffset += 15;
+
+            // Add a separator line after the details
+            doc.setDrawColor(0, 0, 0); // Black color for line
+            doc.line(20, yOffset, 190, yOffset); // Draw a line below the details
+            yOffset += 5;
+
+            // Footer or additional note
+            doc.setTextColor(0, 0, 0); // Reset to black text
+            doc.setFontSize(10);
+            doc.text("Generated by WebSecurity Scan Tool", 20, yOffset);
+            doc.text(`Report generated on: ${new Date().toLocaleString()}`, 20, yOffset + 10);
+
+            // Save the PDF with the website name as the file name
+            doc.save(`${reportData.domain_url}_scan_report.pdf`);
+        }
+
+        // Helper function to get color based on severity level
+        function getSeverityColor(severity) {
+            switch (severity) {
+                case 'High':
+                    return [255, 0, 0]; // Red for High severity
+                case 'Medium':
+                    return [255, 165, 0]; // Orange for Medium severity
+                case 'Low':
+                    return [0, 128, 0]; // Green for Low severity
+                default:
+                    return [0, 0, 0]; // Default black for unknown severity
+            }
+        }
+
+        // Helper function to strip HTML tags
+        function stripHTMLTags(str) {
+            const doc = new DOMParser().parseFromString(str, 'text/html');
+            return doc.body.textContent || "";
+        }
+
+
+    </script> -->
+    <!-- <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Fetch scan reports from the backend
+            fetch('/api/scan-reports/')
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Fetched scan reports:', data);
+
+                    const scanReportTable = document.getElementById('scanReportTable');
+                    data.forEach(report => {
+                        const vulnerabilities = report.pdf_response.vulnerabilities && report.pdf_response.vulnerabilities.length > 0
+                            ? report.pdf_response.vulnerabilities.map(vuln => {
+                                return vuln.vulnerabilities && vuln.vulnerabilities.length > 0
+                                    ? vuln.vulnerabilities.map(vulnDetails => {
+                                        return `<p><strong>CVE:</strong> ${vulnDetails.CVE}, <strong>Description:</strong> ${vulnDetails.description}</p>`;
+                                    }).join('')
+                                    : "No vulnerabilities found";
+                            }).join('')
+                            : "Not Found";
+
+                        const databases = report.pdf_response.databases && report.pdf_response.databases.length > 0
+                            ? report.pdf_response.databases
+                            : "Not Found";
+
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                        <td>${report.domain_url}</td>
+                        <td>${report.created_at}</td>
+                        <td>${databases} ${vulnerabilities}</td>
+                        <td>${JSON.stringify(report.severity)}</td>
+                        <td>
+                            <button class="view-btn" onclick="viewReport('${report.domain_url}', '${JSON.stringify(report.pdf_response.headers_output)}', '${vulnerabilities}', '${report.severity}')">View</button>
+                            <button class="download-btn" onclick="downloadPDF('${report.domain_url}', '${report.created_at}', '${vulnerabilities}', '${report.severity}')">Download</button>
+                        </td>
+                    `;
+                        scanReportTable.appendChild(row);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error fetching scan reports:', error);
+                });
+        });
+
+        // Example function for handling buttons
+        function viewReport(domain, headersOutput, vulnerabilities, severity) {
+            console.log('View Report:', { domain, headersOutput, vulnerabilities, severity });
+            alert(`Viewing report for ${domain}`);
+        }
+
+        function downloadPDF(website, scanDate, vulnerability, severity) {
+            console.log('Download PDF:', { website, scanDate, vulnerability, severity });
+            alert(`Downloading report for ${website}`);
+        }
+    </script> -->
+
+
+
+</body>
+
+</html>
